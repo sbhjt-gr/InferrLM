@@ -8,7 +8,7 @@
   <img src="https://lh3.googleusercontent.com/XTXWqqQPgW4KM6fALBRViYQQPR-qobXzGCu7pNWM8ZYJ8ymbKKh2v_6n-jFyDg5mtu2Z5tsVv23RJGDTamjjzBY" alt="Inferra Header" width="400">
 </p>
 
-Inferra is a mobile application built on React Native and Expo that brings large language models (LLMs) & small language models (SLMs) directly to your Android & iOS device. Cloud-based models (remote models) like Claude, DeepSeek, Gemini and ChatGPT are also supported. File attachments are also well-supported for both local & remote models.
+Inferra is a mobile application that brings LLMs & SLMs directly to your Android & iOS device and lets your device act as a local server. Cloud-based models like Claude, DeepSeek, Gemini and ChatGPT are also supported. File attachments with RAG are also well-supported for local models.
 
 [<img src="https://github.com/user-attachments/assets/bdc18fc5-5a99-410c-b383-eaf9c737176e" alt="Get it on Google Play" width="150">](https://play.google.com/store/apps/details?id=com.gorai.ragionare)
 
@@ -16,22 +16,10 @@ Inferra is a mobile application built on React Native and Expo that brings large
 
 If you want to support me and the development of this project, you can donate to me through [Ko-fi](https://ko-fi.com/subhajitgorai). Any amount is appreciated.
 
-## Screenshots
-
-<p align="center">
-   <img src="https://lh3.googleusercontent.com/jFJWO1yItb9Nr6xIp66vukWrI2XR1YO2aauREiBolk-D78hzsU_wlxQv7Ny1-9ZELF6FYFPdgLAWQve9g__S" alt="Screenshot 1" height="300px">
-   <img src="https://lh3.googleusercontent.com/kmyPf6GGEs5HHFZrUQtYWhsdMw4h0Izsvfdubn10mBFADopTthWJEZfJ7kAKtUWMpJM-QUhF9DQNOc_Hi2pBeg" alt="Screenshot 2" height="300px">
-   <img src="https://lh3.googleusercontent.com/GwF7L1kMENYt7TgAZHfzpV4ZCwoTieSc0H4SFPsHgrn9ZARC-nDgtzf2R2VxqaAyCni2efSvxVJIcWIb5HaScKA" alt="Screenshot 3" height="300px">
-   <img src="https://lh3.googleusercontent.com/E-VO33t0ZLwkQsZR97_PEWaA18ei4czXCA77nPRp4akBbpsX2pDL-Je9cOYHadQkc3WeDCdM_Q_UovaHoH-k" alt="Screenshot 4" height="300px">
-   <img src="https://lh3.googleusercontent.com/ujPaHQZK4Wvbo1pmugeQZepyI2iTP77IrTIbAJn85VLmdqfGrALUqITNZ71PJF0TuJU77DsSRkgeaxnPdop-xw" alt="Screenshot 5" height="300px">
-   <img src="https://lh3.googleusercontent.com/hsLQ0OyKlLBxPX_d_X52hLsEbpzRJvrPcU3Sj9N9mKxRbYkpk598wgZF6Yqr3y5vrk8VNPQKF5Hdp8DgoRPO" alt="Screenshot 6" height="300px">
-   <img src="https://lh3.googleusercontent.com/kIdj7hMfVmLS_6s_Yk1gtRxgsYLjWXz7evPIBBrGvnZ5-T4FosUqzOucKEMYNxJgpDyvViI8S2x3EjVJUsQe" alt="Screenshot 7" height="300px">
-</p>
-
 ## Features
 
 ### Core Inference
-- Local inference through llama.cpp with support for GGUF models. More inference engines are planned for future releases. You can become a contributor by implementing additional engines. See the [contributions guide](#contributing) below.
+- Local inference through llama.cpp with support for GGUF models. More inference engines are planned for future releases. You can become a contributor by implementing additional ones. See the [contributions guide](#contributing) below.
 - Seamless integration with cloud-based models from OpenAI, Gemini, Anthropic and DeepSeek. You need your own API keys and an Inferra registered account for remote models. Using remote models is optional.
 - Apple Foundation support for compatible iOS devices, for Apple Intelligence supported devices when available.
 
@@ -168,12 +156,6 @@ Contributions are welcome! Before starting work:
 When proposing new features, clearly explain what it is, why it's useful, and how you plan to implement it.
 
 Read our [Contributing Guide](docs/CONTRIBUTING.md) for detailed contribution guidelines, code standards, and best practices. 
-
-### Features We're Looking For
-
-- Support for different inference engines other than llama.cpp, including MNN and MLX (Apple-specific) which require custom native code
-
-If you're interested in working on these or have other ideas, open an issue to discuss it.
 
 ## Acknowledgments
 
