@@ -20,9 +20,14 @@ export interface ClaudeRequestOptions {
 
 export class ClaudeService {
   private apiKeyProvider: (provider: string) => Promise<string | null>;
+  private baseUrlProvider: (provider: string) => Promise<string>;
 
-  constructor(apiKeyProvider: (provider: string) => Promise<string | null>) {
+  constructor(
+    apiKeyProvider: (provider: string) => Promise<string | null>,
+    baseUrlProvider: (provider: string) => Promise<string>
+  ) {
     this.apiKeyProvider = apiKeyProvider;
+    this.baseUrlProvider = baseUrlProvider;
   }
 
   private async convertImageToBase64(imageUri: string): Promise<{ data: string; mimeType: string }> {
@@ -163,7 +168,8 @@ export class ClaudeService {
       };
 
       
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const baseUrl = await this.baseUrlProvider('claude');
+  const response = await fetch(`${baseUrl}/messages`, {
         method: 'POST',
         headers,
         body: JSON.stringify(requestBody),

@@ -10,7 +10,8 @@ export const initClaudeService = (): ClaudeService => {
   }
 
   const instance = new ClaudeService(
-    (provider: string) => onlineModelService.getApiKey(provider)
+    (provider: string) => onlineModelService.getApiKey(provider),
+    (provider: string) => onlineModelService.getBaseUrl(provider)
   );
   
   onlineModelService.setClaudeServiceGetter(() => instance);

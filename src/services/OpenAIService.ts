@@ -20,9 +20,14 @@ export interface OpenAIRequestOptions {
 
 export class OpenAIService {
   private apiKeyProvider: (provider: string) => Promise<string | null>;
+  private baseUrlProvider: (provider: string) => Promise<string>;
 
-  constructor(apiKeyProvider: (provider: string) => Promise<string | null>) {
+  constructor(
+    apiKeyProvider: (provider: string) => Promise<string | null>,
+    baseUrlProvider: (provider: string) => Promise<string>
+  ) {
     this.apiKeyProvider = apiKeyProvider;
+    this.baseUrlProvider = baseUrlProvider;
   }
 
   private async convertImageToBase64(imageUri: string): Promise<{ data: string; mimeType: string }> {
@@ -132,7 +137,8 @@ export class OpenAIService {
         formattedMessages.push(formattedMessage);
       }
 
-      const url = `https://api.openai.com/v1/chat/completions`;
+  const baseUrl = await this.baseUrlProvider('chatgpt');
+  const url = `${baseUrl}/chat/completions`;
       
       const requestBody = {
         model,

@@ -44,6 +44,12 @@ class OnlineModelService {
     deepseek: Constants.expoConfig?.extra?.DEEPSEEK_API_KEY || '',
     claude: Constants.expoConfig?.extra?.ANTHROPIC_API_KEY || '',
   };
+  private defaultUrls: Record<string, string> = {
+    gemini: 'https://generativelanguage.googleapis.com/v1beta',
+    chatgpt: 'https://api.openai.com/v1',
+    deepseek: 'https://api.deepseek.com',
+    claude: 'https://api.anthropic.com/v1'
+  };
   private isInitialized = false;
   private initPromise: Promise<void> | null = null;
 
@@ -202,6 +208,66 @@ class OnlineModelService {
       claude: 'claude-sonnet-4-5'
     };
     return defaults[provider] || '';
+  }
+
+  getDefaultBaseUrl(provider: string): string {
+    return this.defaultUrls[provider] || '';
+  }
+
+  async getBaseUrl(provider: string): Promise<string> {
+    try {
+      await this.ensureInitialized();
+      const customUrl = await this.getCustomBaseUrl(provider);
+      if (customUrl) {
+        return this.normalizeBaseUrl(customUrl);
+      }
+      return this.getDefaultBaseUrl(provider);
+    } catch (error) {
+      return this.getDefaultBaseUrl(provider);
+    }
+  }
+
+  async getCustomBaseUrl(provider: string): Promise<string | null> {
+    try {
+      await this.ensureInitialized();
+      const record = await providerKeyStorage.getEntry(provider);
+      return record?.baseUrl || null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async saveBaseUrl(provider: string, baseUrl: string): Promise<boolean> {
+    try {
+      await this.ensureInitialized();
+      const normalized = this.normalizeBaseUrl(baseUrl);
+      if (!normalized) {
+        await providerKeyStorage.upsertEntry(provider, { baseUrl: null });
+      } else {
+        await providerKeyStorage.upsertEntry(provider, { baseUrl: normalized });
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async clearBaseUrl(provider: string): Promise<boolean> {
+    try {
+      await this.ensureInitialized();
+      await providerKeyStorage.upsertEntry(provider, { baseUrl: null });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private normalizeBaseUrl(url: string): string {
+    const trimmed = url.trim();
+    if (!trimmed) {
+      return '';
+    }
+    return trimmed.replace(/\/+$/, '');
   }
 
   addListener(event: keyof OnlineModelServiceEvents, listener: any): () => void {

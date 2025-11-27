@@ -18,9 +18,14 @@ export interface DeepSeekRequestOptions {
 
 export class DeepSeekService {
   private apiKeyProvider: (provider: string) => Promise<string | null>;
+  private baseUrlProvider: (provider: string) => Promise<string>;
 
-  constructor(apiKeyProvider: (provider: string) => Promise<string | null>) {
+  constructor(
+    apiKeyProvider: (provider: string) => Promise<string | null>,
+    baseUrlProvider: (provider: string) => Promise<string>
+  ) {
     this.apiKeyProvider = apiKeyProvider;
+    this.baseUrlProvider = baseUrlProvider;
   }
 
   private parseMessageContent(message: ChatMessage): any {
@@ -75,7 +80,8 @@ export class DeepSeekService {
 
       const formattedMessages = messages.map(msg => this.parseMessageContent(msg));
 
-      const url = `https://api.deepseek.com/chat/completions`;
+  const baseUrl = await this.baseUrlProvider('deepseek');
+  const url = `${baseUrl}/chat/completions`;
       
       const requestBody = {
         model,

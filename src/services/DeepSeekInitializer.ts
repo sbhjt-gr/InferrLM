@@ -10,7 +10,8 @@ export const initDeepSeekService = (): DeepSeekService => {
   }
 
   const instance = new DeepSeekService(
-    (provider: string) => onlineModelService.getApiKey(provider)
+    (provider: string) => onlineModelService.getApiKey(provider),
+    (provider: string) => onlineModelService.getBaseUrl(provider)
   );
   
   onlineModelService.setDeepSeekServiceGetter(() => instance);

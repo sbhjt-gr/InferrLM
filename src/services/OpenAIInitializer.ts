@@ -10,7 +10,8 @@ export const initOpenAIService = (): OpenAIService => {
   }
 
   const instance = new OpenAIService(
-    (provider: string) => onlineModelService.getApiKey(provider)
+    (provider: string) => onlineModelService.getApiKey(provider),
+    (provider: string) => onlineModelService.getBaseUrl(provider)
   );
   
   onlineModelService.setOpenAIServiceGetter(() => instance);

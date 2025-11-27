@@ -5,6 +5,7 @@ interface ProviderKeyRecord {
   customKey: string | null;
   useDefault: number;
   modelName: string | null;
+  baseUrl: string | null;
 }
 
 class ProviderKeyStorage {
@@ -25,7 +26,8 @@ class ProviderKeyStorage {
         provider TEXT PRIMARY KEY,
         customKey TEXT,
         useDefault INTEGER,
-        modelName TEXT
+        modelName TEXT,
+        baseUrl TEXT
       );
 
       CREATE TABLE IF NOT EXISTS app_preferences (
@@ -33,6 +35,17 @@ class ProviderKeyStorage {
         value TEXT
       );
     `);
+
+    await this.ensureApiKeyColumns();
+  }
+
+  private async ensureApiKeyColumns(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const columns = await this.db.getAllAsync<{ name: string }>('PRAGMA table_info(api_keys)');
+    const hasBaseUrl = columns.some(col => col.name === 'baseUrl');
+    if (!hasBaseUrl) {
+      await this.db.execAsync('ALTER TABLE api_keys ADD COLUMN baseUrl TEXT;');
+    }
   }
 
   private getDatabase(): SQLite.SQLiteDatabase {
@@ -43,7 +56,7 @@ class ProviderKeyStorage {
   async getEntry(provider: string): Promise<ProviderKeyRecord | null> {
     const db = this.getDatabase();
     const row = await db.getFirstAsync<ProviderKeyRecord>(
-      'SELECT provider, customKey, useDefault, modelName FROM api_keys WHERE provider = ?',
+      'SELECT provider, customKey, useDefault, modelName, baseUrl FROM api_keys WHERE provider = ?',
       [provider]
     );
 
@@ -56,6 +69,7 @@ class ProviderKeyStorage {
       customKey: row.customKey ?? null,
       useDefault: row.useDefault ?? 1,
       modelName: row.modelName ?? null,
+      baseUrl: row.baseUrl ?? null,
     };
   }
 
@@ -66,12 +80,13 @@ class ProviderKeyStorage {
       customKey: updates.customKey !== undefined ? updates.customKey : current?.customKey ?? null,
       useDefault: updates.useDefault !== undefined ? updates.useDefault : current?.useDefault ?? 1,
       modelName: updates.modelName !== undefined ? updates.modelName : current?.modelName ?? null,
+      baseUrl: updates.baseUrl !== undefined ? updates.baseUrl : current?.baseUrl ?? null,
     };
 
     const db = this.getDatabase();
     await db.runAsync(
-      'INSERT INTO api_keys (provider, customKey, useDefault, modelName) VALUES (?, ?, ?, ?) ON CONFLICT(provider) DO UPDATE SET customKey=excluded.customKey, useDefault=excluded.useDefault, modelName=excluded.modelName',
-      [record.provider, record.customKey, record.useDefault, record.modelName]
+      'INSERT INTO api_keys (provider, customKey, useDefault, modelName, baseUrl) VALUES (?, ?, ?, ?, ?) ON CONFLICT(provider) DO UPDATE SET customKey=excluded.customKey, useDefault=excluded.useDefault, modelName=excluded.modelName, baseUrl=excluded.baseUrl',
+      [record.provider, record.customKey, record.useDefault, record.modelName, record.baseUrl]
     );
   }
 

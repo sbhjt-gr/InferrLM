@@ -10,7 +10,8 @@ export const initGeminiService = (): GeminiService => {
   }
 
   const instance = new GeminiService(
-    (provider: string) => onlineModelService.getApiKey(provider)
+    (provider: string) => onlineModelService.getApiKey(provider),
+    (provider: string) => onlineModelService.getBaseUrl(provider)
   );
   
   onlineModelService.setGeminiServiceGetter(() => instance);

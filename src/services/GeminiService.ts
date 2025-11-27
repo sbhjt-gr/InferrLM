@@ -21,9 +21,14 @@ export interface GeminiRequestOptions {
 
 export class GeminiService {
   private apiKeyProvider: (provider: string) => Promise<string | null>;
+  private baseUrlProvider: (provider: string) => Promise<string>;
 
-  constructor(apiKeyProvider: (provider: string) => Promise<string | null>) {
+  constructor(
+    apiKeyProvider: (provider: string) => Promise<string | null>,
+    baseUrlProvider: (provider: string) => Promise<string>
+  ) {
     this.apiKeyProvider = apiKeyProvider;
+    this.baseUrlProvider = baseUrlProvider;
   }
 
   private async convertImageToBase64(imageUri: string): Promise<{ data: string; mimeType: string }> {
@@ -138,8 +143,9 @@ export class GeminiService {
         });
       }
 
-      const modelPath = model.startsWith('models/') ? model : `models/${model}`;
-      const url = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:${shouldStreamTokens ? 'streamGenerateContent' : 'generateContent'}?key=${apiKey}`;
+  const modelPath = model.startsWith('models/') ? model : `models/${model}`;
+  const baseUrl = await this.baseUrlProvider('gemini');
+  const url = `${baseUrl}/${modelPath}:${shouldStreamTokens ? 'streamGenerateContent' : 'generateContent'}?key=${apiKey}`;
 
       const requestBody = {
         contents: formattedMessages,

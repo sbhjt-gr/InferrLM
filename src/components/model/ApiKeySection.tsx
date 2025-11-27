@@ -18,7 +18,18 @@ interface ApiKeyItem {
   useCustomKey: boolean;
   modelName: string;
   defaultModelName: string;
+  baseUrl: string;
+  defaultBaseUrl: string;
 }
+
+const openAIPresetUrls = [
+  { label: 'OpenAI', url: 'https://api.openai.com/v1' },
+  { label: 'Ollama', url: 'http://localhost:11434/v1' },
+  { label: 'LM Studio', url: 'http://localhost:1234/v1' },
+  { label: 'OpenRouter', url: 'https://openrouter.ai/api/v1' },
+  { label: 'Groq', url: 'https://api.groq.com/openai/v1' },
+  { label: 'Together', url: 'https://api.together.xyz/v1' }
+];
 
 const ApiKeySection: React.FC = () => {
   const { theme: currentTheme } = useTheme();
@@ -29,62 +40,74 @@ const ApiKeySection: React.FC = () => {
   const [dialogMessage, setDialogMessage] = useState('');
   
   const [apiKeyItems, setApiKeyItems] = useState<ApiKeyItem[]>([
-    { 
-      id: 'gemini', 
-      name: 'Gemini', 
-      key: '', 
-      placeholder: 'Enter your Gemini API key', 
-      url: 'https://ai.google.dev/', 
-      expanded: false,
-      defaultKeyAvailable: onlineModelService.hasDefaultKey('gemini'),
-      usingDefaultKey: false,
-      useCustomKey: true,
-      modelName: '',
-      defaultModelName: ''
-    },
-    { 
-      id: 'chatgpt', 
-      name: 'OpenAI', 
-      key: '', 
-      placeholder: 'Enter your OpenAI API key', 
-      url: 'https://platform.openai.com/api-keys', 
-      expanded: false,
-      defaultKeyAvailable: onlineModelService.hasDefaultKey('chatgpt'),
-      usingDefaultKey: false,
-      useCustomKey: true,
-      modelName: '',
-      defaultModelName: ''
-    },
-    { 
-      id: 'deepseek', 
-      name: 'DeepSeek', 
-      key: '', 
-      placeholder: 'Enter your DeepSeek API key', 
-      url: 'https://platform.deepseek.com', 
-      expanded: false,
-      defaultKeyAvailable: onlineModelService.hasDefaultKey('deepseek'),
-      usingDefaultKey: false,
-      useCustomKey: true,
-      modelName: '',
-      defaultModelName: ''
-    },
-    { 
-      id: 'claude', 
-      name: 'Claude', 
-      key: '', 
-      placeholder: 'Enter your Claude API key', 
-      expanded: false,
-      defaultKeyAvailable: onlineModelService.hasDefaultKey('claude'),
-      usingDefaultKey: false,
-      useCustomKey: true,
-      modelName: '',
-      defaultModelName: ''
-    },
-  ]);
+      { 
+        id: 'gemini', 
+        name: 'Gemini', 
+        key: '', 
+        placeholder: 'Enter your Gemini API key', 
+        url: 'https://ai.google.dev/', 
+        expanded: false,
+        defaultKeyAvailable: onlineModelService.hasDefaultKey('gemini'),
+        usingDefaultKey: false,
+        useCustomKey: true,
+        modelName: '',
+        defaultModelName: '',
+        baseUrl: '',
+        defaultBaseUrl: onlineModelService.getDefaultBaseUrl('gemini')
+      },
+      { 
+        id: 'chatgpt', 
+        name: 'OpenAI', 
+        key: '', 
+        placeholder: 'Enter your OpenAI API key', 
+        url: 'https://platform.openai.com/api-keys', 
+        expanded: false,
+        defaultKeyAvailable: onlineModelService.hasDefaultKey('chatgpt'),
+        usingDefaultKey: false,
+        useCustomKey: true,
+        modelName: '',
+        defaultModelName: '',
+        baseUrl: '',
+        defaultBaseUrl: onlineModelService.getDefaultBaseUrl('chatgpt')
+      },
+      { 
+        id: 'deepseek', 
+        name: 'DeepSeek', 
+        key: '', 
+        placeholder: 'Enter your DeepSeek API key', 
+        url: 'https://platform.deepseek.com', 
+        expanded: false,
+        defaultKeyAvailable: onlineModelService.hasDefaultKey('deepseek'),
+        usingDefaultKey: false,
+        useCustomKey: true,
+        modelName: '',
+        defaultModelName: '',
+        baseUrl: '',
+        defaultBaseUrl: onlineModelService.getDefaultBaseUrl('deepseek')
+      },
+      { 
+        id: 'claude', 
+        name: 'Claude', 
+        key: '', 
+        placeholder: 'Enter your Claude API key', 
+        url: 'https://www.anthropic.com',
+        expanded: false,
+        defaultKeyAvailable: onlineModelService.hasDefaultKey('claude'),
+        usingDefaultKey: false,
+        useCustomKey: true,
+        modelName: '',
+        defaultModelName: '',
+        baseUrl: '',
+        defaultBaseUrl: onlineModelService.getDefaultBaseUrl('claude')
+      },
+    ]);
   
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savingModel, setSavingModel] = useState<string | null>(null);
+  const [savingBaseUrl, setSavingBaseUrl] = useState<string | null>(null);
   const [keyVisibility, setKeyVisibility] = useState<Record<string, boolean>>({});
+
+  const isValidUrl = (value: string) => /^https?:\/\//i.test(value.trim());
 
   const showDialog = (title: string, message: string) => {
     setDialogTitle(title);
@@ -161,6 +184,14 @@ const ApiKeySection: React.FC = () => {
     );
   };
 
+  const updateBaseUrl = (id: string, value: string) => {
+    setApiKeyItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, baseUrl: value } : item
+      )
+    );
+  };
+
   const loadApiKeys = async () => {
     setIsLoadingApiKeys(true);
     try {
@@ -170,12 +201,16 @@ const ApiKeySection: React.FC = () => {
           const customKey = await onlineModelService.getApiKey(item.id);
           const modelName = await onlineModelService.getModelName(item.id);
           const defaultModelName = onlineModelService.getDefaultModelName(item.id);
+          const customBaseUrl = await onlineModelService.getCustomBaseUrl(item.id);
+          const defaultBaseUrl = onlineModelService.getDefaultBaseUrl(item.id);
           
           return { 
             ...item, 
             key: customKey || '',
             modelName: modelName || defaultModelName,
             defaultModelName,
+            baseUrl: customBaseUrl || '',
+            defaultBaseUrl,
             useCustomKey: !isUsingDefault,
             usingDefaultKey: isUsingDefault,
             defaultKeyAvailable: onlineModelService.hasDefaultKey(item.id)
@@ -251,6 +286,40 @@ const ApiKeySection: React.FC = () => {
       showDialog('Error', `Failed to save ${id} model name`);
     } finally {
       setSavingModel(null);
+    }
+  };
+
+  const saveBaseUrl = async (id: string) => {
+    setSavingBaseUrl(id);
+    try {
+      const item = apiKeyItems.find(entry => entry.id === id);
+      if (!item) return;
+      const trimmed = item.baseUrl.trim();
+      if (trimmed && !isValidUrl(trimmed)) {
+        showDialog('Error', 'Enter a valid URL starting with http:// or https://');
+        return;
+      }
+      if (trimmed) {
+        await onlineModelService.saveBaseUrl(id, trimmed);
+        setApiKeyItems(prevItems =>
+          prevItems.map(prevItem =>
+            prevItem.id === id ? { ...prevItem, baseUrl: trimmed } : prevItem
+          )
+        );
+        showDialog('Success', `${item.name} base URL saved`);
+      } else {
+        await onlineModelService.clearBaseUrl(id);
+        setApiKeyItems(prevItems =>
+          prevItems.map(prevItem =>
+            prevItem.id === id ? { ...prevItem, baseUrl: '' } : prevItem
+          )
+        );
+        showDialog('Success', `${item.name} base URL reset to default`);
+      }
+    } catch (error) {
+      showDialog('Error', `Failed to save ${id} base URL`);
+    } finally {
+      setSavingBaseUrl(null);
     }
   };
 
@@ -358,6 +427,53 @@ const ApiKeySection: React.FC = () => {
                 autoCapitalize="none"
               />
             </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={[styles.inputLabel, { color: themeColors.text }]}>Base URL</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { 
+                    color: themeColors.text,
+                    backgroundColor: themeColors.background,
+                    borderColor: themeColors.borderColor,
+                    paddingRight: 12
+                  }
+                ]}
+                placeholder={`Default: ${item.defaultBaseUrl || 'None'}`}
+                placeholderTextColor={themeColors.secondaryText}
+                value={item.baseUrl}
+                onChangeText={(text) => updateBaseUrl(item.id, text)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+            </View>
+
+            <HelperText type="info" style={{ color: themeColors.secondaryText }}>
+              {item.baseUrl 
+                ? `Using custom base URL: ${item.baseUrl}`
+                : `Using default base URL: ${item.defaultBaseUrl || 'Not set'}`}
+            </HelperText>
+
+            {item.id === 'chatgpt' && (
+              <View style={styles.presetContainer}>
+                <Text style={[styles.presetLabel, { color: themeColors.text }]}>Popular endpoints</Text>
+                <View style={styles.presetChips}>
+                  {openAIPresetUrls.map(preset => (
+                    <TouchableOpacity
+                      key={preset.label}
+                      style={[styles.presetChip, { borderColor: themeColors.borderColor }]}
+                      onPress={() => updateBaseUrl(item.id, preset.url)}
+                    >
+                      <Text style={[styles.presetChipText, { color: themeColors.primary }]}>
+                        {preset.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
             
             <View style={styles.actionRow}>
               
@@ -390,6 +506,21 @@ const ApiKeySection: React.FC = () => {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.saveButtonText}>Save Model</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: themeColors.primary }
+                ]}
+                onPress={() => saveBaseUrl(item.id)}
+                disabled={savingBaseUrl === item.id}
+              >
+                {savingBaseUrl === item.id ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Base URL</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -537,6 +668,29 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  presetContainer: {
+    marginBottom: 12,
+  },
+  presetLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  presetChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  presetChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  presetChipText: {
+    fontSize: 13,
     fontWeight: '600',
   },
   loadingContainer: {
