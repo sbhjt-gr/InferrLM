@@ -326,7 +326,7 @@ export default function ModelSettingsDialog({
           {modelSettingsConfig.useGlobalSettings && (
             <View style={[styles.globalPreviewSection, { backgroundColor: themeColors.borderColor }]}>
               <Text style={[styles.previewTitle, { color: themeColors.text }]}>
-                Current Global Settings Preview
+                Current Global Settings
               </Text>
               <Text style={[styles.previewDescription, { color: themeColors.secondaryText }]}>
                 These are the settings currently applied from your global configuration.

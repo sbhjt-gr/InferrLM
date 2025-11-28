@@ -306,6 +306,25 @@ export default function ImageProcessingSelector({
         </View>
       )}
 
+      {selectedMode === 'multimodal' && onToggleRag && (
+        <View
+          style={[
+            styles.ragRow,
+            {
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              opacity: 0.6,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="information-outline" size={20} color={isDark ? '#666666' : '#999999'} />
+          <View style={[styles.ragTextContainer, { paddingLeft: 8 }]}>
+            <Text style={[styles.ragTitle, { color: isDark ? '#666666' : '#999999' }]}>RAG disabled</Text>
+            <Text style={[styles.ragDescription, { color: isDark ? '#555555' : '#aaaaaa' }]}>RAG is not used with Vision Analysis mode.</Text>
+          </View>
+        </View>
+      )}
+
       <Portal>
         <Dialog visible={mmProjSelectorVisible} onDismiss={handleProjectorSelectorClose}>
           <Dialog.Title style={{ color: isDark ? '#ffffff' : '#000000' }}>

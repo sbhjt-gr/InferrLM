@@ -89,7 +89,7 @@ export default function ImageViewerModal({
         if (onImageUpload) {
           onImageUpload(multimodalMessage);
         } else {
-          onUpload?.(multimodalMessage, fileName || 'image', userPrompt, useRag);
+          onUpload?.(multimodalMessage, fileName || 'image', userPrompt, false);
         }
       }
       

@@ -811,6 +811,9 @@ export class MessageProcessingService {
       }
       try {
         const parsed = JSON.parse(entry.content);
+        if (parsed?.type === 'multimodal') {
+          return true;
+        }
         return parsed?.metadata?.ragDisabled === true;
       } catch {
         return false;
