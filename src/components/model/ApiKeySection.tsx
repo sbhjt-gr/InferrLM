@@ -41,21 +41,6 @@ const ApiKeySection: React.FC = () => {
   
   const [apiKeyItems, setApiKeyItems] = useState<ApiKeyItem[]>([
       { 
-        id: 'gemini', 
-        name: 'Gemini', 
-        key: '', 
-        placeholder: 'Enter your Gemini API key', 
-        url: 'https://ai.google.dev/', 
-        expanded: false,
-        defaultKeyAvailable: onlineModelService.hasDefaultKey('gemini'),
-        usingDefaultKey: false,
-        useCustomKey: true,
-        modelName: '',
-        defaultModelName: '',
-        baseUrl: '',
-        defaultBaseUrl: onlineModelService.getDefaultBaseUrl('gemini')
-      },
-      { 
         id: 'chatgpt', 
         name: 'OpenAI', 
         key: '', 
@@ -69,6 +54,21 @@ const ApiKeySection: React.FC = () => {
         defaultModelName: '',
         baseUrl: '',
         defaultBaseUrl: onlineModelService.getDefaultBaseUrl('chatgpt')
+      },
+      { 
+        id: 'gemini', 
+        name: 'Gemini', 
+        key: '', 
+        placeholder: 'Enter your Gemini API key', 
+        url: 'https://ai.google.dev/', 
+        expanded: false,
+        defaultKeyAvailable: onlineModelService.hasDefaultKey('gemini'),
+        usingDefaultKey: false,
+        useCustomKey: true,
+        modelName: '',
+        defaultModelName: '',
+        baseUrl: '',
+        defaultBaseUrl: onlineModelService.getDefaultBaseUrl('gemini')
       },
       { 
         id: 'deepseek', 
