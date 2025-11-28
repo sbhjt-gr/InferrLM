@@ -35,9 +35,15 @@ class ChatManager {
   private isInitialized = false;
   private initPromise: Promise<void> | null = null;
   private saveDebounceTimeout: NodeJS.Timeout | null = null;
+  private isLoadingChat = false;
+  private pendingSaves: Map<string, NodeJS.Timeout> = new Map();
 
   constructor() {
     this.initPromise = this.initializeDatabase();
+  }
+
+  isCurrentlyLoadingChat(): boolean {
+    return this.isLoadingChat;
   }
 
   private async initializeDatabase(): Promise<void> {
@@ -102,6 +108,12 @@ class ChatManager {
   async createNewChat(initialMessages: ChatMessage[] = []): Promise<Chat> {
     try {
       await this.ensureInitialized();
+      
+      if (this.isLoadingChat) {
+        const currentChat = this.getCurrentChat();
+        if (currentChat) return currentChat;
+      }
+      
       try {
         await RAGService.clear();
       } catch (error) {
@@ -114,20 +126,6 @@ class ChatManager {
           currentChat.timestamp = Date.now();
           await this.saveChat(currentChat);
         }
-      }
-
-      const existingEmptyChat = this.cache.find(chat => chat.messages.length === 0);
-
-      if (existingEmptyChat) {
-        existingEmptyChat.timestamp = Date.now();
-        existingEmptyChat.messages = initialMessages;
-        this.currentChatId = existingEmptyChat.id;
-        await this.persistCurrentChat();
-        if (initialMessages.length > 0) {
-          await this.saveChat(existingEmptyChat);
-        }
-        this.notifyListeners();
-        return existingEmptyChat;
       }
 
       const newChat: Chat = {
@@ -150,15 +148,20 @@ class ChatManager {
     }
   }
 
-  async setCurrentChat(chatId: string): Promise<boolean> {
+  async setCurrentChat(chatId: string, skipNotify: boolean = false): Promise<boolean> {
     try {
       await this.ensureInitialized();
+      
+      this.isLoadingChat = true;
 
       const chat = this.getChatById(chatId);
-      if (!chat) return false;
+      if (!chat) {
+        this.isLoadingChat = false;
+        return false;
+      }
 
       const prevChatId = this.currentChatId;
-      if (prevChatId) {
+      if (prevChatId && prevChatId !== chatId) {
         const prevChat = this.getChatById(prevChatId);
         if (prevChat && prevChat.messages.length > 0) {
           prevChat.timestamp = Date.now();
@@ -172,9 +175,15 @@ class ChatManager {
       if (chat.messages.length > 0) {
         await this.saveChat(chat);
       }
-      this.notifyListeners();
+      
+      this.isLoadingChat = false;
+      
+      if (!skipNotify) {
+        this.notifyListeners();
+      }
       return true;
     } catch (error) {
+      this.isLoadingChat = false;
       return false;
     }
   }
@@ -233,28 +242,43 @@ class ChatManager {
       if (thinking !== undefined) message.thinking = thinking;
       if (stats) message.stats = stats;
 
-      this.debouncedSaveChat();
-      this.notifyListeners();
+      this.debouncedSaveChat(this.currentChatId);
       return true;
     } catch (error) {
       return false;
     }
   }
 
-  private debouncedSaveChat(): void {
-    if (this.saveDebounceTimeout) {
-      clearTimeout(this.saveDebounceTimeout);
+  private debouncedSaveChat(chatId: string): void {
+    const existingTimeout = this.pendingSaves.get(chatId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
     }
 
-    this.saveDebounceTimeout = setTimeout(async () => {
-      if (this.currentChatId) {
-        const chat = this.getChatById(this.currentChatId);
-        if (chat) {
-          await this.saveChat(chat);
-        }
+    const timeout = setTimeout(async () => {
+      const chat = this.getChatById(chatId);
+      if (chat) {
+        await this.saveChat(chat);
       }
-      this.saveDebounceTimeout = null;
-    }, 500);
+      this.pendingSaves.delete(chatId);
+    }, 300);
+    
+    this.pendingSaves.set(chatId, timeout);
+  }
+
+  async flushPendingSaves(): Promise<void> {
+    const savePromises: Promise<void>[] = [];
+    
+    for (const [chatId, timeout] of this.pendingSaves) {
+      clearTimeout(timeout);
+      const chat = this.getChatById(chatId);
+      if (chat) {
+        savePromises.push(this.saveChat(chat));
+      }
+    }
+    
+    this.pendingSaves.clear();
+    await Promise.all(savePromises);
   }
 
   async editMessage(messageId: string, newContent: string): Promise<boolean> {

@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ChatMessage } from '../utils/ChatManager';
 import chatManager from '../utils/ChatManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const useChatManagement = () => {
-  const [chatId, setChatId] = useState<string | null>(null);
+  const [chatId, setChatIdState] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoadingChat, setIsLoadingChat] = useState(false);
@@ -13,6 +13,25 @@ export const useChatManagement = () => {
   const [chatTitles, setChatTitles] = useState<{ [key: string]: string }>({});
   
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const chatIdRef = useRef<string | null>(null);
+
+  const setChatId = useCallback((id: string | null) => {
+    setChatIdState(id);
+    chatIdRef.current = id;
+  }, []);
+
+  useEffect(() => {
+    const syncChatId = () => {
+      const currentId = chatManager.getCurrentChatId();
+      if (currentId && currentId !== chatIdRef.current) {
+        setChatId(currentId);
+      }
+    };
+    
+    syncChatId();
+    const unsubscribe = chatManager.addListener(syncChatId);
+    return () => unsubscribe();
+  }, [setChatId]);
 
   const loadChats = useCallback(async () => {
     try {
@@ -32,9 +51,10 @@ export const useChatManagement = () => {
   const loadChat = useCallback(async (id: string) => {
     setIsLoadingChat(true);
     try {
+      await chatManager.setCurrentChat(id, true);
       const chat = chatManager.getChatById(id);
       if (chat) {
-        setMessages(chat.messages || []);
+        setMessages([...chat.messages] || []);
         setChatId(id);
       }
     } catch (error) {
@@ -42,7 +62,7 @@ export const useChatManagement = () => {
     } finally {
       setIsLoadingChat(false);
     }
-  }, []);
+  }, [setChatId]);
 
   const createNewChat = useCallback(async () => {
     const newChat = await chatManager.createNewChat();
@@ -53,34 +73,36 @@ export const useChatManagement = () => {
     loadChats();
     
     return newChat.id;
-  }, [loadChats]);
+  }, [loadChats, setChatId]);
 
   const saveMessages = useCallback((messagesToSave: ChatMessage[]) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
+    const currentChatId = chatIdRef.current || chatManager.getCurrentChatId();
+    if (!currentChatId) return;
+
     saveTimeoutRef.current = setTimeout(async () => {
-      if (chatId) {
-        try {
-          await chatManager.updateChatMessages(chatId, messagesToSave);
-        } catch (error) {
-          console.error('error_saving_messages', error);
-        }
+      try {
+        await chatManager.updateChatMessages(currentChatId, messagesToSave);
+      } catch (error) {
+        console.error('error_saving_messages', error);
       }
-    }, 500);
-  }, [chatId]);
+    }, 300);
+  }, []);
 
   const saveMessagesImmediate = useCallback(async (messagesToSave: ChatMessage[]) => {
-    if (chatId) {
+    const currentChatId = chatIdRef.current || chatManager.getCurrentChatId();
+    if (currentChatId) {
       try {
-        await chatManager.updateChatMessages(chatId, messagesToSave);
+        await chatManager.updateChatMessages(currentChatId, messagesToSave);
       } catch (error) {
         console.error('error_saving_messages_immediate', error);
         throw error;
       }
     }
-  }, [chatId]);
+  }, []);
 
   const saveMessagesDebounced = {
     cancel: () => {
@@ -88,6 +110,13 @@ export const useChatManagement = () => {
         clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = null;
       }
+    },
+    flush: async () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      await chatManager.flushPendingSaves();
     }
   };
 
@@ -111,21 +140,21 @@ export const useChatManagement = () => {
     try {
       await chatManager.deleteChat(id);
       
-      setChats(prev => prev.filter(chatId => chatId !== id));
+      setChats(prev => prev.filter(cId => cId !== id));
       setChatTitles(prev => {
         const updated = { ...prev };
         delete updated[id];
         return updated;
       });
       
-      if (chatId === id) {
+      if (chatIdRef.current === id) {
         const newChatId = await createNewChat();
         setChatId(newChatId);
       }
     } catch (error) {
       console.error('error_deleting_chat', error);
     }
-  }, [chatId, createNewChat]);
+  }, [createNewChat, setChatId]);
 
   return {
     chatId,

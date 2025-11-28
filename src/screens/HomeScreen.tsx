@@ -167,8 +167,18 @@ export default function HomeScreen({ route, navigation }: HomeScreenProps) {
     }, [])
   );
 
+  const loadChatIdRef = useRef<string | null>(null);
+  const isLoadingChatRef = useRef(false);
+
   useEffect(() => {
     const initializeChat = async () => {
+      const pendingLoadChatId = route.params?.loadChatId || (route.params as any)?.params?.loadChatId;
+      if (pendingLoadChatId) {
+        loadChatIdRef.current = pendingLoadChatId;
+        isFirstLaunchRef.current = false;
+        return;
+      }
+
       if (isFirstLaunchRef.current) {
         await startNewChat();
         isFirstLaunchRef.current = false;
@@ -187,6 +197,9 @@ export default function HomeScreen({ route, navigation }: HomeScreenProps) {
     initializeChat();
 
     const unsubscribe = chatManager.addListener(() => {
+      if (isLoadingChatRef.current || chatManager.isCurrentlyLoadingChat()) {
+        return;
+      }
       const currentChat = chatManager.getCurrentChat();
       if (currentChat) {
         setChat(currentChat);
@@ -215,14 +228,23 @@ export default function HomeScreen({ route, navigation }: HomeScreenProps) {
       const loadChatId = route.params?.loadChatId || (route.params as any)?.params?.loadChatId;
 
       if (loadChatId) {
-        await chatManager.ensureInitialized();
-        const specificChat = chatManager.getChatById(loadChatId);
-        if (specificChat) {
-          setChat(specificChat);
-          setMessages(specificChat.messages || []);
-          await chatManager.setCurrentChat(loadChatId);
+        isLoadingChatRef.current = true;
+        isFirstLaunchRef.current = false;
+        
+        try {
+          await chatManager.ensureInitialized();
+          await chatManager.setCurrentChat(loadChatId, true);
+          
+          const specificChat = chatManager.getChatById(loadChatId);
+          if (specificChat) {
+            setChat(specificChat);
+            setMessages([...specificChat.messages]);
+          }
+        } finally {
+          isLoadingChatRef.current = false;
+          loadChatIdRef.current = null;
+          navigation.setParams({ loadChatId: undefined });
         }
-        navigation.setParams({ loadChatId: undefined });
       }
     };
 
@@ -245,20 +267,31 @@ export default function HomeScreen({ route, navigation }: HomeScreenProps) {
     }, [activeProvider, enableRemoteModels, isLoggedIn])
   );
 
+  const isRegeneratingRef = useRef(isRegenerating);
+  const isStreamingRef = useRef(isStreaming);
+  const isLoadingRef = useRef(isLoading);
+  
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', 
-      ChatLifecycleService.setupAppStateListener(
-        () => ChatLifecycleService.loadCurrentChat({ setChat, setMessages }),
-        isRegenerating || false,
-        isStreaming || false,
-        isLoading || false
-      )
-    );
+    isRegeneratingRef.current = isRegenerating;
+    isStreamingRef.current = isStreaming;
+    isLoadingRef.current = isLoading;
+  }, [isRegenerating, isStreaming, isLoading]);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        if (!isRegeneratingRef.current && !isStreamingRef.current && !isLoadingRef.current && !isLoadingChatRef.current) {
+          ChatLifecycleService.loadCurrentChat({ setChat, setMessages });
+        }
+      }
+    };
+    
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {
       subscription?.remove();
     };
-  }, [isRegenerating, isStreaming, isLoading]);
+  }, []);
 
   const handleSend = async (text: string) => {
     const messageText = text.trim();
