@@ -42,7 +42,7 @@ const ApiKeySection: React.FC = () => {
   const [apiKeyItems, setApiKeyItems] = useState<ApiKeyItem[]>([
       { 
         id: 'chatgpt', 
-        name: 'OpenAI', 
+        name: 'OpenAI API', 
         key: '', 
         placeholder: 'Enter your OpenAI API key', 
         url: 'https://platform.openai.com/api-keys', 
@@ -57,7 +57,7 @@ const ApiKeySection: React.FC = () => {
       },
       { 
         id: 'gemini', 
-        name: 'Gemini', 
+        name: 'Gemini API', 
         key: '', 
         placeholder: 'Enter your Gemini API key', 
         url: 'https://ai.google.dev/', 
@@ -72,7 +72,7 @@ const ApiKeySection: React.FC = () => {
       },
       { 
         id: 'deepseek', 
-        name: 'DeepSeek', 
+        name: 'DeepSeek API', 
         key: '', 
         placeholder: 'Enter your DeepSeek API key', 
         url: 'https://platform.deepseek.com', 
@@ -87,7 +87,7 @@ const ApiKeySection: React.FC = () => {
       },
       { 
         id: 'claude', 
-        name: 'Claude', 
+        name: 'Claude API', 
         key: '', 
         placeholder: 'Enter your Claude API key', 
         url: 'https://www.anthropic.com',
@@ -102,9 +102,7 @@ const ApiKeySection: React.FC = () => {
       },
     ]);
   
-  const [savingKey, setSavingKey] = useState<string | null>(null);
-  const [savingModel, setSavingModel] = useState<string | null>(null);
-  const [savingBaseUrl, setSavingBaseUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
   const [keyVisibility, setKeyVisibility] = useState<Record<string, boolean>>({});
 
   const isValidUrl = (value: string) => /^https?:\/\//i.test(value.trim());
@@ -144,7 +142,7 @@ const ApiKeySection: React.FC = () => {
     const useCustom = !item.useCustomKey;
     
     try {
-      setSavingKey(id);
+      setSaving(id);
       
       await onlineModelService.useDefaultKey(id, !useCustom);
       
@@ -164,7 +162,7 @@ const ApiKeySection: React.FC = () => {
       
     } catch (error) {
     } finally {
-      setSavingKey(null);
+      setSaving(null);
     }
   };
 
@@ -225,16 +223,21 @@ const ApiKeySection: React.FC = () => {
     }
   };
 
-  const saveApiKey = async (id: string) => {
-    setSavingKey(id);
+  const saveAll = async (id: string) => {
+    setSaving(id);
     try {
       const item = apiKeyItems.find(item => item.id === id);
       if (!item) return;
 
+      const trimmedUrl = item.baseUrl.trim();
+      if (trimmedUrl && !isValidUrl(trimmedUrl)) {
+        showDialog('Error', 'Enter a valid URL starting with http:// or https://');
+        return;
+      }
+
       if (item.useCustomKey) {
         if (item.key.trim()) {
           await onlineModelService.saveApiKey(id, item.key.trim());
-          showDialog('Success', `Custom ${item.name} API key saved successfully`);
         } else {
           if (item.defaultKeyAvailable) {
             await onlineModelService.useDefaultKey(id, true);
@@ -247,29 +250,14 @@ const ApiKeySection: React.FC = () => {
                 } : prevItem
               )
             );
-            showDialog('Success', `Switched to built-in ${item.name} API key`);
           } else {
             await onlineModelService.clearApiKey(id);
-            showDialog('Success', `${item.name} API key cleared`);
           }
         }
       }
-    } catch (error) {
-      showDialog('Error', `Failed to save ${id} API key`);
-    } finally {
-      setSavingKey(null);
-    }
-  };
-
-  const saveModelName = async (id: string) => {
-    setSavingModel(id);
-    try {
-      const item = apiKeyItems.find(item => item.id === id);
-      if (!item) return;
 
       if (item.modelName.trim()) {
         await onlineModelService.saveModelName(id, item.modelName.trim());
-        showDialog('Success', `${item.name} model name saved successfully`);
       } else {
         await onlineModelService.clearModelName(id);
         setApiKeyItems(prevItems =>
@@ -280,33 +268,15 @@ const ApiKeySection: React.FC = () => {
             } : prevItem
           )
         );
-        showDialog('Success', `${item.name} model name reset to default`);
       }
-    } catch (error) {
-      showDialog('Error', `Failed to save ${id} model name`);
-    } finally {
-      setSavingModel(null);
-    }
-  };
 
-  const saveBaseUrl = async (id: string) => {
-    setSavingBaseUrl(id);
-    try {
-      const item = apiKeyItems.find(entry => entry.id === id);
-      if (!item) return;
-      const trimmed = item.baseUrl.trim();
-      if (trimmed && !isValidUrl(trimmed)) {
-        showDialog('Error', 'Enter a valid URL starting with http:// or https://');
-        return;
-      }
-      if (trimmed) {
-        await onlineModelService.saveBaseUrl(id, trimmed);
+      if (trimmedUrl) {
+        await onlineModelService.saveBaseUrl(id, trimmedUrl);
         setApiKeyItems(prevItems =>
           prevItems.map(prevItem =>
-            prevItem.id === id ? { ...prevItem, baseUrl: trimmed } : prevItem
+            prevItem.id === id ? { ...prevItem, baseUrl: trimmedUrl } : prevItem
           )
         );
-        showDialog('Success', `${item.name} base URL saved`);
       } else {
         await onlineModelService.clearBaseUrl(id);
         setApiKeyItems(prevItems =>
@@ -314,12 +284,14 @@ const ApiKeySection: React.FC = () => {
             prevItem.id === id ? { ...prevItem, baseUrl: '' } : prevItem
           )
         );
-        showDialog('Success', `${item.name} base URL reset to default`);
       }
+
+      showDialog('Success', `${item.name} settings saved`);
     } catch (error) {
-      showDialog('Error', `Failed to save ${id} base URL`);
+      const item = apiKeyItems.find(i => i.id === id);
+      showDialog('Error', `Failed to save ${item?.name || id} settings`);
     } finally {
-      setSavingBaseUrl(null);
+      setSaving(null);
     }
   };
 
@@ -371,7 +343,7 @@ const ApiKeySection: React.FC = () => {
                   value={item.useCustomKey}
                   onValueChange={() => toggleUseCustomKey(item.id)}
                   trackColor={{ false: "#767577", true: themeColors.primary }}
-                  disabled={savingKey === item.id}
+                  disabled={saving === item.id}
                 />
               </View>
             )}
@@ -450,12 +422,6 @@ const ApiKeySection: React.FC = () => {
               />
             </View>
 
-            <HelperText type="info" style={{ color: themeColors.secondaryText }}>
-              {item.baseUrl 
-                ? `Using custom base URL: ${item.baseUrl}`
-                : `Using default base URL: ${item.defaultBaseUrl || 'Not set'}`}
-            </HelperText>
-
             {item.id === 'chatgpt' && (
               <View style={styles.presetContainer}>
                 <Text style={[styles.presetLabel, { color: themeColors.text }]}>Popular endpoints</Text>
@@ -476,51 +442,18 @@ const ApiKeySection: React.FC = () => {
             )}
             
             <View style={styles.actionRow}>
-              
-              {(item.useCustomKey || !item.defaultKeyAvailable) && (
-                <TouchableOpacity
-                  style={[
-                    styles.saveButton,
-                    { backgroundColor: themeColors.primary }
-                  ]}
-                  onPress={() => saveApiKey(item.id)}
-                  disabled={savingKey === item.id}
-                >
-                  {savingKey === item.id ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>Save API Key</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-              
               <TouchableOpacity
                 style={[
                   styles.saveButton,
                   { backgroundColor: themeColors.primary }
                 ]}
-                onPress={() => saveModelName(item.id)}
-                disabled={savingModel === item.id}
+                onPress={() => saveAll(item.id)}
+                disabled={saving === item.id}
               >
-                {savingModel === item.id ? (
+                {saving === item.id ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.saveButtonText}>Save Model</Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  { backgroundColor: themeColors.primary }
-                ]}
-                onPress={() => saveBaseUrl(item.id)}
-                disabled={savingBaseUrl === item.id}
-              >
-                {savingBaseUrl === item.id ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Base URL</Text>
+                  <Text style={styles.saveButtonText}>Save</Text>
                 )}
               </TouchableOpacity>
             </View>
