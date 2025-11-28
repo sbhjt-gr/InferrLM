@@ -95,10 +95,9 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const [showSystemPromptDialog, setShowSystemPromptDialog] = useState(false);
   const [storageInfo, setStorageInfo] = useState({
     tempSize: '0 B',
-    modelsSize: '0 B',
     cacheSize: '0 B'
   });
-  const [isClearing, setIsClearing] = useState(false);
+  const [clearingType, setClearingType] = useState<'cache' | 'temp' | 'models' | null>(null);
   const [gpuSettings, setGpuSettings] = useState<GpuSettings>(
     gpuSettingsService.getSettingsSync()
   );
@@ -443,16 +442,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const loadStorageInfo = async () => {
     try {
       const tempDir = `${FileSystem.documentDirectory}temp`;
-      const modelsDir = `${FileSystem.documentDirectory}models`;
       const cacheDir = FileSystem.cacheDirectory || '';
 
       const tempSize = await getDirectorySize(tempDir);
-      const modelsSize = await getDirectorySize(modelsDir);
       const cacheSize = await getDirectorySize(cacheDir);
 
       setStorageInfo({
         tempSize: formatBytes(tempSize),
-        modelsSize: formatBytes(modelsSize),
         cacheSize: formatBytes(cacheSize)
       });
     } catch (error) {
@@ -477,7 +473,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
   const clearCache = async () => {
     try {
-      setIsClearing(true);
+      setClearingType('cache');
       if (FileSystem.cacheDirectory) {
         await clearDirectory(FileSystem.cacheDirectory);
       }
@@ -490,13 +486,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         <Button key="ok" onPress={hideDialog}>OK</Button>
       ]);
     } finally {
-      setIsClearing(false);
+      setClearingType(null);
     }
   };
 
   const clearTempFiles = async () => {
     try {
-      setIsClearing(true);
+      setClearingType('temp');
       const tempDir = `${FileSystem.documentDirectory}temp`;
       await clearDirectory(tempDir);
       await loadStorageInfo();
@@ -508,7 +504,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
         <Button key="ok" onPress={hideDialog}>OK</Button>
       ]);
     } finally {
-      setIsClearing(false);
+      setClearingType(null);
     }
   };
 
@@ -524,7 +520,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
             onPress={async () => {
               hideDialog();
               try {
-                setIsClearing(true);
+                setClearingType('models');
                 const modelsDir = `${FileSystem.documentDirectory}models`;
                 await clearDirectory(modelsDir);
                 await modelDownloader.clearAllModels();
@@ -538,7 +534,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
                   <Button key="ok" onPress={hideDialog}>OK</Button>
                 ]);
               } finally {
-                setIsClearing(false);
+                setClearingType(null);
               }
             }}
           >
@@ -729,7 +725,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
         <StorageSection
           storageInfo={storageInfo}
-          isClearing={isClearing}
+          clearingType={clearingType}
           onClearCache={clearCache}
           onClearTempFiles={clearTempFiles}
           onClearAllModels={clearAllModels}

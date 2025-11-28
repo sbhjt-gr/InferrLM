@@ -8,13 +8,14 @@ import { getThemeAwareColor } from '../../utils/ColorUtils';
 
 type StorageInfo = {
   tempSize: string;
-  modelsSize: string;
   cacheSize: string;
 };
 
+type ClearingType = 'cache' | 'temp' | 'models' | null;
+
 type StorageSectionProps = {
   storageInfo: StorageInfo;
-  isClearing: boolean;
+  clearingType: ClearingType;
   onClearCache: () => void;
   onClearTempFiles: () => void;
   onClearAllModels: () => void;
@@ -22,7 +23,7 @@ type StorageSectionProps = {
 
 const StorageSection = ({
   storageInfo,
-  isClearing,
+  clearingType,
   onClearCache,
   onClearTempFiles,
   onClearAllModels
@@ -36,7 +37,7 @@ const StorageSection = ({
       <TouchableOpacity 
         style={styles.settingItem}
         onPress={onClearCache}
-        disabled={isClearing}
+        disabled={clearingType !== null}
       >
         <View style={styles.settingLeft}>
           <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}>
@@ -51,7 +52,7 @@ const StorageSection = ({
             </Text>
           </View>
         </View>
-        {isClearing ? (
+        {clearingType === 'cache' ? (
           <ActivityIndicator size="small" color={themeColors.primary} />
         ) : (
           <MaterialCommunityIcons name="chevron-right" size={20} color={themeColors.secondaryText} />
@@ -61,7 +62,7 @@ const StorageSection = ({
       <TouchableOpacity 
         style={[styles.settingItem, styles.settingItemBorder]}
         onPress={onClearTempFiles}
-        disabled={isClearing}
+        disabled={clearingType !== null}
       >
         <View style={styles.settingLeft}>
           <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}>
@@ -76,7 +77,7 @@ const StorageSection = ({
             </Text>
           </View>
         </View>
-        {isClearing ? (
+        {clearingType === 'temp' ? (
           <ActivityIndicator size="small" color={themeColors.primary} />
         ) : (
           <MaterialCommunityIcons name="chevron-right" size={20} color={themeColors.secondaryText} />
@@ -86,7 +87,7 @@ const StorageSection = ({
       <TouchableOpacity 
         style={[styles.settingItem, styles.settingItemBorder]}
         onPress={onClearAllModels}
-        disabled={isClearing}
+        disabled={clearingType !== null}
       >
         <View style={styles.settingLeft}>
           <View style={[styles.iconContainer, { backgroundColor: '#FF3B3020' }]}>
@@ -97,11 +98,11 @@ const StorageSection = ({
               Clear All Models
             </Text>
             <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
-              {storageInfo.modelsSize} of model data will be permanently deleted
+              All model data will be permanently deleted
             </Text>
           </View>
         </View>
-        {isClearing ? (
+        {clearingType === 'models' ? (
           <ActivityIndicator size="small" color={getThemeAwareColor('#FF3B30', currentTheme)} />
         ) : (
           <MaterialCommunityIcons name="chevron-right" size={20} color={themeColors.secondaryText} />
