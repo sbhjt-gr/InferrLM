@@ -21,6 +21,7 @@ If you want to support me and the development of this project, you can donate to
 ### Core Inference
 - Local inference through llama.cpp with support for GGUF models. More inference engines are planned for future releases. You can become a contributor by implementing additional ones. See the [contributions guide](#contributing) below.
 - Seamless integration with cloud-based models from OpenAI, Gemini, Anthropic and DeepSeek. You need your own API keys and an Inferra registered account for remote models. Using remote models is optional.
+- Customizable base URLs for OpenAI-compatible providers like Ollama, LM Studio, OpenRouter, Groq and Together AI. This allows you to use local inference servers or alternative API endpoints.
 - Apple Foundation support for compatible iOS devices, for Apple Intelligence supported devices when available.
 
 ### Vision and Multimodal
