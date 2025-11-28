@@ -91,8 +91,8 @@ android {
         applicationId 'com.gorai.ragionare'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 271
-        versionName "0.7.1"
+        versionCode 272
+        versionName "0.7.2"
     }
     
     compileOptions {
