@@ -100,11 +100,18 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             onPress={onPress}
             style={styles.tabItem}
           >
-            <MaterialCommunityIcons
-              name={iconName as any}
-              size={24}
-              color={isFocused ? themeColors.tabBarActiveText : themeColors.tabBarInactiveText}
-            />
+            <View style={styles.iconContainer}>
+              <MaterialCommunityIcons
+                name={iconName as any}
+                size={24}
+                color={isFocused ? themeColors.tabBarActiveText : themeColors.tabBarInactiveText}
+              />
+              {route.name === 'LocalServerTab' && (
+                <View style={styles.betaBadge}>
+                  <Text style={styles.betaText}>Beta</Text>
+                </View>
+              )}
+            </View>
             <Text
               style={[
                 {
@@ -179,5 +186,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconContainer: {
+    position: 'relative',
+  },
+  betaBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -14,
+    backgroundColor: '#FF6B00',
+    borderRadius: 4,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+  },
+  betaText: {
+    color: '#FFFFFF',
+    fontSize: 7,
+    fontWeight: '700',
   },
 }); 

@@ -457,16 +457,7 @@ const ApiKeySection: React.FC = () => {
                 )}
               </TouchableOpacity>
             </View>
-            
-            <HelperText type="info" style={{ color: themeColors.secondaryText }}>
-              {item.useCustomKey 
-                ? (item.key 
-                    ? `Your custom API key is configured. Current model: ${item.modelName || item.defaultModelName}` 
-                    : `Enter your API key to use ${item.name} models. You can also customize the model name above.`)
-                : (item.defaultKeyAvailable 
-                    ? `Currently using built-in API key with model: ${item.modelName || item.defaultModelName}. Toggle switch above to use your own key for better privacy and control.` 
-                    : "No built-in API key available. You need to provide your own API key.")}
-            </HelperText>
+         
           </Surface>
         </List.Accordion>
       ))}
