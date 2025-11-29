@@ -7,7 +7,7 @@
     <key>EXUpdatesEnabled</key>
     <true/>
     <key>EXUpdatesLaunchWaitMs</key>
-    <integer>30000</integer>
+    <integer>0</integer>
     <key>EXUpdatesRuntimeVersion</key>
     <string>0.7.3</string>
     <key>EXUpdatesURL</key>

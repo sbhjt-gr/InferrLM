@@ -167,23 +167,39 @@ export class StoredModelsManager extends EventEmitter {
   private async syncStorageWithFileSystem(): Promise<void> {
     console.log('sync_start');
     try {
+      const baseDir = this.fileManager.getBaseDir();
+      const dirInfo = await FileSystem.getInfoAsync(baseDir);
+      
+      if (!dirInfo.exists) {
+        console.log('dir_not_exists_creating');
+        await FileSystem.makeDirectoryAsync(baseDir, { intermediates: true });
+        await this.saveModelsToStorage([]);
+        return;
+      }
+
+      const filesOnDisk = await FileSystem.readDirectoryAsync(baseDir);
       const storedData = await AsyncStorage.getItem(this.STORAGE_KEY);
-      if (storedData) {
-        const models: StoredModel[] = JSON.parse(storedData);
-        const validated = await this.validateFiles(models);
-        if (validated.length !== models.length) {
-          console.log('sync_removed_missing', models.length - validated.length);
-          await this.saveModelsToStorage(validated);
-        }
-        console.log('sync_validated');
+      const storedModels: StoredModel[] = storedData ? JSON.parse(storedData) : [];
+      
+      const validated = await this.validateFiles(storedModels);
+      const storedNames = new Set(validated.map(m => m.name));
+      const diskHasUnknown = filesOnDisk.some(f => !storedNames.has(f));
+      
+      if (diskHasUnknown || validated.length === 0 && filesOnDisk.length > 0) {
+        console.log('sync_disk_has_unknown_files');
+        await this.scanFileSystemAndUpdateStorage();
         return;
       }
       
-      console.log('no_storage_scanning_filesystem');
-      await this.scanFileSystemAndUpdateStorage();
+      if (validated.length !== storedModels.length) {
+        console.log('sync_removed_missing', storedModels.length - validated.length);
+        await this.saveModelsToStorage(validated);
+      }
+      
       console.log('sync_complete');
     } catch (error) {
       console.log('sync_error', error);
+      await this.scanFileSystemAndUpdateStorage();
     }
   }
 
