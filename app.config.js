@@ -14,6 +14,7 @@ export default {
     splash: {
       image: "./assets/icon.png",
       resizeMode: "cover",
+      
       backgroundColor: "#660880"
     },
     updates: {

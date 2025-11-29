@@ -13,10 +13,40 @@ export class StoredModelsManager extends EventEmitter {
   private isInitialized: boolean = false;
   private isInitializing: boolean = false;
   private initializationPromise: Promise<void> | null = null;
+  private opLock: Promise<void> = Promise.resolve();
 
   constructor(fileManager: FileManager) {
     super();
     this.fileManager = fileManager;
+  }
+
+  private async withLock<T>(op: () => Promise<T>): Promise<T> {
+    const prev = this.opLock;
+    let unlock: () => void;
+    this.opLock = new Promise(r => { unlock = r; });
+    await prev;
+    try {
+      return await op();
+    } finally {
+      unlock!();
+    }
+  }
+
+  private async validateFiles(models: StoredModel[]): Promise<StoredModel[]> {
+    const valid: StoredModel[] = [];
+    for (const model of models) {
+      try {
+        const info = await FileSystem.getInfoAsync(model.path);
+        if (info.exists) {
+          valid.push(model);
+        } else {
+          console.log('file_missing', model.name);
+        }
+      } catch {
+        console.log('validate_error', model.name);
+      }
+    }
+    return valid;
   }
 
   async initialize(): Promise<void> {
@@ -139,7 +169,13 @@ export class StoredModelsManager extends EventEmitter {
     try {
       const storedData = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (storedData) {
-        console.log('storage_exists_skip_sync');
+        const models: StoredModel[] = JSON.parse(storedData);
+        const validated = await this.validateFiles(models);
+        if (validated.length !== models.length) {
+          console.log('sync_removed_missing', models.length - validated.length);
+          await this.saveModelsToStorage(validated);
+        }
+        console.log('sync_validated');
         return;
       }
       
@@ -163,40 +199,39 @@ export class StoredModelsManager extends EventEmitter {
   }
 
   async deleteModel(path: string): Promise<void> {
-    try {
-      await this.fileManager.deleteFile(path);
-      
+    return this.withLock(async () => {
       const dir = path.substring(0, path.lastIndexOf('/'));
       const baseName = path.substring(path.lastIndexOf('/') + 1);
-      const potentialProjectorName = baseName.replace('.gguf', '-mmproj-f16.gguf');
-      const potentialProjectorPath = `${dir}/${potentialProjectorName}`;
+      const projectorName = baseName.replace('.gguf', '-mmproj-f16.gguf');
+      const projectorPath = `${dir}/${projectorName}`;
       
-      let projectorDeleted = false;
+      let hasProjector = false;
       try {
-        const projectorInfo = await FileSystem.getInfoAsync(potentialProjectorPath);
-        if (projectorInfo?.exists) {
-          await this.fileManager.deleteFile(potentialProjectorPath);
-          projectorDeleted = true;
-          console.log('mmproj_deleted', potentialProjectorName);
-        }
-      } catch (projectorError) {
-        console.log('mmproj_delete_check_error', projectorError);
+        const projInfo = await FileSystem.getInfoAsync(projectorPath);
+        hasProjector = projInfo?.exists ?? false;
+      } catch {
+        hasProjector = false;
       }
       
       const currentModels = await this.getStoredModels();
-      let updatedModels = currentModels.filter(model => model.path !== path);
+      let updated = currentModels.filter(m => m.path !== path);
+      if (hasProjector) {
+        updated = updated.filter(m => m.path !== projectorPath);
+      }
+      await this.saveModelsToStorage(updated);
       
-      if (projectorDeleted) {
-        updatedModels = updatedModels.filter(model => model.path !== potentialProjectorPath);
+      try {
+        await this.fileManager.deleteFile(path);
+        if (hasProjector) {
+          await this.fileManager.deleteFile(projectorPath);
+          console.log('mmproj_deleted', projectorName);
+        }
+      } catch (err) {
+        console.log('file_delete_error', err);
       }
       
-      await this.saveModelsToStorage(updatedModels);
-      
       this.emit('modelsChanged');
-    } catch (error) {
-      console.log('delete_model_error', error);
-      throw error;
-    }
+    });
   }
 
   public async refresh(): Promise<void> {
@@ -254,12 +289,19 @@ export class StoredModelsManager extends EventEmitter {
   }
 
   async linkExternalModel(uri: string, fileName: string): Promise<void> {
-    try {
+    return this.withLock(async () => {
       const baseDir = this.fileManager.getBaseDir();
       const destPath = `${baseDir}/${fileName}`;
+      
+      const stored = await this.getStoredModels();
+      const nameExists = stored.some(m => m.name === fileName);
+      if (nameExists) {
+        throw new Error('A model with this name already exists');
+      }
+      
       const destInfo = await FileSystem.getInfoAsync(destPath);
       if (destInfo.exists) {
-        throw new Error('A model with this name already exists in the models directory');
+        throw new Error('A file with this name already exists');
       }
 
       const fileInfo = await FileSystem.getInfoAsync(uri, { size: true });
@@ -303,10 +345,7 @@ export class StoredModelsManager extends EventEmitter {
       await this.saveModelsToStorage(updatedModels);
 
       this.emit('modelsChanged');
-
-    } catch (error) {
-      throw error;
-    }
+    });
   }
 
   async exportModel(modelPath: string, modelName: string): Promise<void> {
@@ -348,4 +387,4 @@ export class StoredModelsManager extends EventEmitter {
       throw error;
     }
   }
-} 
+}

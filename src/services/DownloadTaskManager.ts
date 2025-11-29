@@ -4,6 +4,7 @@ import {DownloadProgressEvent, DownloadTaskInfo, StoredModel} from './ModelDownl
 import {FileManager} from './FileManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
+import {hasEnoughSpace} from '../utils/storageUtils';
 
 export class DownloadTaskManager extends EventEmitter {
   private activeDownloads: Map<string, DownloadTaskInfo> = new Map();
@@ -72,10 +73,10 @@ export class DownloadTaskManager extends EventEmitter {
           downloadInfo.status = 'completed';
           downloadInfo.progress = 100;
         }
+        const tempPath = `${this.fileManager.getDownloadDir()}/${modelName}`;
+        const modelPath = `${this.fileManager.getBaseDir()}/${modelName}`;
+        
         try {
-          const tempPath = `${this.fileManager.getDownloadDir()}/${modelName}`;
-          const modelPath = `${this.fileManager.getBaseDir()}/${modelName}`;
-          
           const tempInfo = await FileSystem.getInfoAsync(tempPath, { size: true });
           
           if (tempInfo.exists) {
@@ -105,6 +106,15 @@ export class DownloadTaskManager extends EventEmitter {
             await this.saveDownloadProgress();
           }
         } catch (error) {
+          try {
+            await this.fileManager.deleteFile(tempPath);
+            console.log('temp_cleaned_on_error', modelName);
+          } catch {
+            console.log('temp_cleanup_failed', modelName);
+          }
+          
+          this.activeDownloads.delete(modelName);
+          await this.saveDownloadProgress();
           
           this.emit('downloadFailed', {
             modelName,
@@ -119,6 +129,12 @@ export class DownloadTaskManager extends EventEmitter {
         if (downloadInfo) {
           downloadInfo.status = 'failed';
         }
+        
+        const tempPath = `${this.fileManager.getDownloadDir()}/${modelName}`;
+        this.fileManager.deleteFile(tempPath).catch(() => {
+          console.log('error_cleanup_failed', modelName);
+        });
+        
         this.emit('downloadFailed', {
           modelName,
           downloadId: this.getDownloadIdForModel(modelName),
@@ -184,10 +200,18 @@ export class DownloadTaskManager extends EventEmitter {
   async startDownload(
     modelName: string,
     downloadUrl: string,
-    authToken?: string
+    authToken?: string,
+    estimatedSize?: number
   ): Promise<number> {
     if (this.activeDownloads.has(modelName)) {
       throw new Error(`Download already in progress for model: ${modelName}`);
+    }
+
+    if (estimatedSize && estimatedSize > 0) {
+      const enough = await hasEnoughSpace(estimatedSize);
+      if (!enough) {
+        throw new Error('Insufficient storage space');
+      }
     }
 
     const downloadId = this.nextDownloadId++;

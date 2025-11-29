@@ -103,6 +103,11 @@ class ModelDownloader extends EventEmitter {
     }
   }
 
+  private getActiveDownloadNames(): Set<string> {
+    const active = this.downloadTaskManager.getActiveDownloads();
+    return new Set(active.map(d => d.modelName));
+  }
+
   private async initialize(): Promise<void> {
     if (this.isInitialized) {
       return;
@@ -131,7 +136,7 @@ class ModelDownloader extends EventEmitter {
       
       await this.downloadTaskManager.processCompletedDownloads();
       
-      await this.fileManager.cleanupTempDirectory();
+      await this.fileManager.cleanupTempDirectory(this.getActiveDownloadNames());
       
       this.isInitialized = true;
     } catch (error) {
@@ -218,7 +223,7 @@ class ModelDownloader extends EventEmitter {
       
       await this.downloadTaskManager.processCompletedDownloads();
       
-      await this.fileManager.cleanupTempDirectory();
+      await this.fileManager.cleanupTempDirectory(this.getActiveDownloadNames());
       
       await this.storedModelsManager.refreshStoredModels();
     } catch (error) {

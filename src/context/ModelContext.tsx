@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as FileSystem from 'expo-file-system';
 import { llamaManager } from '../utils/LlamaManager';
 import { Snackbar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './ThemeContext';
+import { modelDownloader } from '../services/ModelDownloader';
 
 interface ModelContextType {
   selectedModelPath: string | null;
@@ -51,7 +53,21 @@ export const ModelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsModelLoading(true);
     
     try {
+      const fileInfo = await FileSystem.getInfoAsync(modelPath);
+      if (!fileInfo.exists) {
+        console.log('model_file_missing', modelPath);
+        showSnackbar('Model file not found', 'error');
+        modelDownloader.refresh();
+        setIsModelLoading(false);
+        return false;
+      }
+      
       if (mmProjectorPath) {
+        const projInfo = await FileSystem.getInfoAsync(mmProjectorPath);
+        if (!projInfo.exists) {
+          console.log('projector_file_missing', mmProjectorPath);
+          mmProjectorPath = undefined;
+        }
       }
       
       const success = await llamaManager.loadModel(modelPath, mmProjectorPath);
