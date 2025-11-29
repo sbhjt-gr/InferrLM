@@ -20,7 +20,6 @@ export default {
     updates: {
       enabled: true,
       checkAutomatically: 'ON_LOAD',
-      fallbackToCacheTimeout: 30000,
       url: "https://u.expo.dev/5ef5d807-bc8b-4dcb-a3f4-2bad3c098b3e"
     },
     assetBundlePatterns: [
@@ -33,9 +32,6 @@ export default {
       buildNumber: "273",
       runtimeVersion: "0.7.3",
       deploymentTarget: "17.0",
-      updates: {
-        enabled: false
-      },
       infoPlist: {
         UIBackgroundModes: [
           "fetch",
