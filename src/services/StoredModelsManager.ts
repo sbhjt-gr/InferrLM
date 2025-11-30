@@ -96,72 +96,75 @@ export class StoredModelsManager extends EventEmitter {
   }
 
   private async scanFileSystemAndUpdateStorage(): Promise<StoredModel[]> {
-    console.log('scan_filesystem_start');
-    try {
-      const baseDir = this.fileManager.getBaseDir();
-      console.log('base_dir', baseDir);
+    return this.withLock(async () => {
+      console.log('scan_filesystem_start');
+      try {
+        const baseDir = this.fileManager.getBaseDir();
+        console.log('base_dir', baseDir);
 
-      const dirInfo = await FileSystem.getInfoAsync(baseDir);
-      if (!dirInfo.exists) {
-        console.log('dir_not_exists');
-        await FileSystem.makeDirectoryAsync(baseDir, { intermediates: true });
+        const dirInfo = await FileSystem.getInfoAsync(baseDir);
+        if (!dirInfo.exists) {
+          console.log('dir_not_exists');
+          await FileSystem.makeDirectoryAsync(baseDir, { intermediates: true });
+          const emptyModels: StoredModel[] = [];
+          await this.saveModelsToStorage(emptyModels);
+          return emptyModels;
+        }
+
+        console.log('reading_directory');
+        const dir = await FileSystem.readDirectoryAsync(baseDir);
+        console.log('files_found', dir.length);
+
+        const models: StoredModel[] = [];
+        if (dir.length > 0) {
+          console.log('processing_files');
+          for (const name of dir) {
+            try {
+              const path = `${baseDir}/${name}`;
+              const fileInfo = await FileSystem.getInfoAsync(path, { size: true });
+              if (!fileInfo.exists || (fileInfo as any).isDirectory) {
+                continue;
+              }
+
+              const size = (fileInfo as any).size || 0;
+              const modified = new Date().toISOString();
+
+              const capabilities = detectVisionCapabilities(name);
+              const modelType = capabilities.isProjection
+                ? ModelType.PROJECTION
+                : capabilities.isVision
+                  ? ModelType.VISION
+                  : ModelType.LLM;
+
+              models.push({
+                name,
+                path,
+                size,
+                modified,
+                isExternal: false,
+                modelType,
+                capabilities: capabilities.capabilities,
+                supportsMultimodal: capabilities.isVision,
+                compatibleProjectionModels: capabilities.compatibleProjections,
+                defaultProjectionModel: capabilities.defaultProjection,
+              });
+            } catch (fileError) {
+              console.log('scan_file_error', name, fileError);
+            }
+          }
+        }
+
+        console.log('saving_to_storage', models.length);
+        await this.saveModelsToStorage(models);
+        console.log('scan_complete');
+        return models;
+      } catch (error) {
+        console.log('scan_error', error);
         const emptyModels: StoredModel[] = [];
         await this.saveModelsToStorage(emptyModels);
         return emptyModels;
       }
-
-      console.log('reading_directory');
-      const dir = await FileSystem.readDirectoryAsync(baseDir);
-      console.log('files_found', dir.length);
-
-      let models: StoredModel[] = [];
-      if (dir.length > 0) {
-        console.log('processing_files');
-        models = await Promise.all(
-          dir.map(async (name) => {
-            const path = `${baseDir}/${name}`;
-            const fileInfo = await FileSystem.getInfoAsync(path, { size: true });
-
-            let size = 0;
-            if (fileInfo.exists) {
-              size = (fileInfo as any).size || 0;
-            }
-
-            const modified = new Date().toISOString();
-
-            const capabilities = detectVisionCapabilities(name);
-            const modelType = capabilities.isProjection
-              ? ModelType.PROJECTION
-              : capabilities.isVision
-                ? ModelType.VISION
-                : ModelType.LLM;
-
-            return {
-              name,
-              path,
-              size,
-              modified,
-              isExternal: false,
-              modelType,
-              capabilities: capabilities.capabilities,
-              supportsMultimodal: capabilities.isVision,
-              compatibleProjectionModels: capabilities.compatibleProjections,
-              defaultProjectionModel: capabilities.defaultProjection,
-            };
-          })
-        );
-      }
-
-      console.log('saving_to_storage', models.length);
-      await this.saveModelsToStorage(models);
-      console.log('scan_complete');
-      return models;
-    } catch (error) {
-      console.log('scan_error', error);
-      const emptyModels: StoredModel[] = [];
-      await this.saveModelsToStorage(emptyModels);
-      return emptyModels;
-    }
+    });
   }
 
   private async syncStorageWithFileSystem(): Promise<void> {
