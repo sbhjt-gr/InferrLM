@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   logCategoryTag: {
-    color: '#52D273',
+    color: '#52D274',
   },
   logMessage: {
     color: '#E4E4E4',

@@ -20,11 +20,10 @@ export class ChatLifecycleService {
       : rawModelPath;
     
     if (currentModelPath && activeProvider === 'local') {
-      const settings = await modelSettingsService.getModelSettings(currentModelPath);
-      return {
-        ...llamaManager.getSettings(),
-        ...settings
-      };
+      const settingsConfig = await modelSettingsService.getModelSettings(currentModelPath);
+      if (!settingsConfig.useGlobalSettings && settingsConfig.customSettings) {
+        return settingsConfig.customSettings;
+      }
     }
     
     return llamaManager.getSettings();
