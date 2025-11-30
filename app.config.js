@@ -4,7 +4,7 @@ export default {
     slug: "inferra",
     owner: "subhajitgorai",
     version: "0.7.4",
-    orientation: "portrait",
+    orientation: "default",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
     description: "AI-powered mobile chat assistant supporting both local and cloud-based language models. Features include AI text generation, image analysis, document processing, and multimodal interactions. All AI-generated content is clearly labeled for transparency.",
