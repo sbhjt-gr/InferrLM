@@ -103,6 +103,26 @@ export const DOWNLOADABLE_MODELS: DownloadableModel[] = [
     "tags": ["recommended"]
   },
   {
+    "name": "Gemma 3 Vision 4B",
+    "description": "Google's multimodal Gemma 3 with vision capabilities for image understanding and visual reasoning.",
+    "size": "2.92 GB",
+    "huggingFaceLink": "https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf",
+    "licenseLink": "https://ai.google.dev/gemma/terms",
+    "modelFamily": "4 Billion",
+    "quantization": "Q4_K_M",
+    "tags": ["vision", "recommended"],
+    "modelType": ModelType.VISION,
+    "capabilities": ["vision", "text"],
+    "supportsMultimodal": true,
+    "additionalFiles": [
+      {
+        "name": "mmproj-model-f16.gguf",
+        "url": "https://huggingface.co/ggml-org/gemma-3-4b-it-GGUF/resolve/main/mmproj-model-f16.gguf",
+        "description": "Multimodal projector for Gemma 3 Vision"
+      }
+    ]
+  },
+  {
     "name": "Qwen3 4B Instruct",
     "description": "Alibaba's latest Qwen3 generation with 4B parameters, enhanced reasoning and 128K context length.",
     "size": "2.9 GB",

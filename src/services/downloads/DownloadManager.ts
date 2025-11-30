@@ -10,6 +10,7 @@ import {
 } from './types';
 
 import {StoredModel} from '../ModelDownloaderTypes';
+import {normalizePath, getFileName} from '../../utils/pathUtils';
 
 const {TransferModule} = NativeModules;
 const LOG_TAG = 'BackgroundDownloadService';
@@ -520,9 +521,8 @@ export class BackgroundDownloadService {
       return undefined;
     }
 
-    const sanitised = source.replace('file://', '');
-    const segments = sanitised.split('/').filter(Boolean);
-    return segments.length > 0 ? segments[segments.length - 1] : undefined;
+    const name = getFileName(normalizePath(source));
+    return name || undefined;
   }
 
   private createTransferJobFromNativeEvent(

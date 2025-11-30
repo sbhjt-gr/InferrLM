@@ -123,28 +123,42 @@ export class FileManager extends EventEmitter {
     }
   }
 
-  async cleanupTempDirectory(): Promise<void> {
+  async cleanupTempDirectory(activeDownloads: Set<string> = new Set()): Promise<void> {
     try {
-      
       const tempDirInfo = await FileSystem.getInfoAsync(this.downloadDir);
       if (!tempDirInfo.exists) {
         return;
       }
       
-      const downloadDirContents = await FileSystem.readDirectoryAsync(this.downloadDir);
+      const contents = await FileSystem.readDirectoryAsync(this.downloadDir);
+      const now = Date.now();
+      const staleThreshold = 24 * 60 * 60 * 1000;
       
-      for (const filename of downloadDirContents) {
-        const sourcePath = `${this.downloadDir}/${filename}`;
+      for (const filename of contents) {
+        if (activeDownloads.has(filename)) {
+          continue;
+        }
         
-        const sourceInfo = await FileSystem.getInfoAsync(sourcePath, { size: true });
-        if (!sourceInfo.exists || (sourceInfo as any).size === 0) {
-          try {
-            await FileSystem.deleteAsync(sourcePath, { idempotent: true });
-          } catch (error) {
+        const filePath = `${this.downloadDir}/${filename}`;
+        
+        try {
+          const info = await FileSystem.getInfoAsync(filePath, { size: true });
+          if (!info.exists) continue;
+          
+          const modTime = (info as any).modificationTime || 0;
+          const isStale = modTime > 0 && (now - modTime * 1000) > staleThreshold;
+          const isEmpty = (info as any).size === 0;
+          
+          if (isEmpty || isStale) {
+            await FileSystem.deleteAsync(filePath, { idempotent: true });
+            console.log('temp_cleaned', filename);
           }
+        } catch {
+          console.log('temp_cleanup_error', filename);
         }
       }
     } catch (error) {
+      console.log('cleanup_dir_error', error);
     }
   }
 

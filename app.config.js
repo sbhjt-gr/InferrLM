@@ -3,8 +3,8 @@ export default {
     name: "Inferra",
     slug: "inferra",
     owner: "subhajitgorai",
-    version: "0.7.2",
-    orientation: "portrait",
+    version: "0.7.5",
+    orientation: "default",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
     description: "AI-powered mobile chat assistant supporting both local and cloud-based language models. Features include AI text generation, image analysis, document processing, and multimodal interactions. All AI-generated content is clearly labeled for transparency.",
@@ -14,12 +14,12 @@ export default {
     splash: {
       image: "./assets/icon.png",
       resizeMode: "cover",
+      
       backgroundColor: "#660880"
     },
     updates: {
       enabled: true,
       checkAutomatically: 'ON_LOAD',
-      fallbackToCacheTimeout: 30000,
       url: "https://u.expo.dev/5ef5d807-bc8b-4dcb-a3f4-2bad3c098b3e"
     },
     assetBundlePatterns: [
@@ -29,12 +29,9 @@ export default {
       supportsTablet: true,
       requireFullScreen: false,
       bundleIdentifier: "com.gorai.inferra",
-      buildNumber: "272",
-      runtimeVersion: "0.7.2",
+      buildNumber: "275",
+      runtimeVersion: "0.7.5",
       deploymentTarget: "17.0",
-      updates: {
-        enabled: false
-      },
       infoPlist: {
         UIBackgroundModes: [
           "fetch",
@@ -62,13 +59,13 @@ export default {
       scheme: "com.gorai.inferra"
     },
     android: {
-      versionCode: 272,
+      versionCode: 275,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#660880"
       },
       package: "com.gorai.ragionare",
-      runtimeVersion: "0.7.2",
+      runtimeVersion: "0.7.5",
       googleServicesFile: "./android/app/google-services.json",
       edgeToEdgeEnabled: true,
       resizeableActivity: true,

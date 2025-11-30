@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, Fragment } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { AppState, AppStateStatus, Text, TextInput, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -113,21 +113,22 @@ function Navigation() {
   };
 
   useEffect(() => {
-    const checkForUpdates = async () => {
-      if (!__DEV__ && Updates.isEnabled) {
-        try {
-          const update = await Updates.checkForUpdateAsync();
-          if (update.isAvailable) {
-            await Updates.fetchUpdateAsync();
-            Updates.reloadAsync();
-          }
-        } catch (error) {
-          
-        }
+    let isMounted = true;
+    
+    const fetchUpdates = async () => {
+      if (__DEV__ || !Updates.isEnabled) return;
+      
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (!update.isAvailable || !isMounted) return;
+        
+        await Updates.fetchUpdateAsync();
+      } catch (error) {
+        console.log('update_fetch_error');
       }
     };
 
-    checkForUpdates();
+    const updateTimer = setTimeout(fetchUpdates, 3000);
 
     const timer = setTimeout(() => {
       registerBackgroundFetchAsync().catch(error => {
@@ -174,6 +175,8 @@ function Navigation() {
     }
 
     return () => {
+      isMounted = false;
+      clearTimeout(updateTimer);
       clearTimeout(timer);
       try {
         llamaManager.release();
@@ -181,7 +184,6 @@ function Navigation() {
           subscription.remove();
         }
       } catch (error) {
-        // do nothing
       }
     };
   }, []);

@@ -118,22 +118,31 @@ export default function WideScreenLayout({}: WideScreenLayoutProps) {
     tab, 
     icon, 
     label, 
-    isActive 
+    isActive,
+    showBeta = false,
   }: { 
     tab: TabType; 
     icon: string; 
     label: string; 
     isActive: boolean;
+    showBeta?: boolean;
   }) => (
     <TouchableOpacity
       style={styles.tabItem}
       onPress={() => setActiveTab(tab)}
     >
-      <MaterialCommunityIcons
-        name={icon as any}
-        size={24}
-        color={isActive ? themeColors.tabBarActiveText : themeColors.tabBarInactiveText}
-      />
+      <View style={styles.iconContainer}>
+        <MaterialCommunityIcons
+          name={icon as any}
+          size={24}
+          color={isActive ? themeColors.tabBarActiveText : themeColors.tabBarInactiveText}
+        />
+        {showBeta && (
+          <View style={styles.betaBadge}>
+            <Text style={styles.betaText}>Beta</Text>
+          </View>
+        )}
+      </View>
       <Text
         style={[
           styles.tabLabel,
@@ -198,6 +207,7 @@ export default function WideScreenLayout({}: WideScreenLayoutProps) {
               icon={activeTab === 'server' ? 'server' : 'server'}
               label="Server"
               isActive={activeTab === 'server'}
+              showBeta
             />
             <TabButton
               tab="settings"
@@ -270,6 +280,23 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconContainer: {
+    position: 'relative',
+  },
+  betaBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -14,
+    backgroundColor: '#FF6B00',
+    borderRadius: 4,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+  },
+  betaText: {
+    color: '#FFFFFF',
+    fontSize: 7,
+    fontWeight: '700',
   },
   tabLabel: {
     fontSize: 12,
