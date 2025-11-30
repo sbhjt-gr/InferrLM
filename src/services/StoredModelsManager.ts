@@ -180,29 +180,24 @@ export class StoredModelsManager extends EventEmitter {
         return;
       }
 
-      const filesOnDisk = await FileSystem.readDirectoryAsync(baseDir);
       const storedData = await AsyncStorage.getItem(this.STORAGE_KEY);
       const storedModels: StoredModel[] = storedData ? JSON.parse(storedData) : [];
       
-      const validated = await this.validateFiles(storedModels);
-      const storedNames = new Set(validated.map(m => m.name));
-      const diskHasUnknown = filesOnDisk.some(f => !storedNames.has(f));
+      if (storedModels.length > 0) {
+        console.log('sync_has_stored_models', storedModels.length);
+        return;
+      }
       
-      if (diskHasUnknown || validated.length === 0 && filesOnDisk.length > 0) {
-        console.log('sync_disk_has_unknown_files');
+      const filesOnDisk = await FileSystem.readDirectoryAsync(baseDir);
+      if (filesOnDisk.length > 0) {
+        console.log('sync_storage_empty_but_files_exist');
         await this.scanFileSystemAndUpdateStorage();
         return;
       }
       
-      if (validated.length !== storedModels.length) {
-        console.log('sync_removed_missing', storedModels.length - validated.length);
-        await this.saveModelsToStorage(validated);
-      }
-      
-      console.log('sync_complete');
+      console.log('sync_complete_empty');
     } catch (error) {
       console.log('sync_error', error);
-      await this.scanFileSystemAndUpdateStorage();
     }
   }
 
@@ -254,6 +249,18 @@ export class StoredModelsManager extends EventEmitter {
   }
 
   public async refresh(): Promise<void> {
+    console.log('refresh_validate_start');
+    const models = await this.getStoredModels();
+    const validated = await this.validateFiles(models);
+    if (validated.length !== models.length) {
+      console.log('refresh_removed_missing', models.length - validated.length);
+      await this.saveModelsToStorage(validated);
+      this.emit('modelsChanged');
+    }
+  }
+
+  public async forceRescan(): Promise<void> {
+    console.log('force_rescan');
     await this.scanFileSystemAndUpdateStorage();
     this.emit('modelsChanged');
   }

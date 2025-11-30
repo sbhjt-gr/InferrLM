@@ -29,7 +29,7 @@ export default {
       supportsTablet: true,
       requireFullScreen: false,
       bundleIdentifier: "com.gorai.inferra",
-      buildNumber: "275",
+      buildNumber: "276",
       runtimeVersion: "0.7.5",
       deploymentTarget: "17.0",
       infoPlist: {
@@ -59,7 +59,7 @@ export default {
       scheme: "com.gorai.inferra"
     },
     android: {
-      versionCode: 275,
+      versionCode: 276,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#660880"
