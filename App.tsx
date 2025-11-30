@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, Fragment, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { AppState, AppStateStatus, Text, TextInput, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -27,7 +27,6 @@ import { initClaudeService } from './src/services/ClaudeInitializer';
 import { PaperProvider } from 'react-native-paper';
 import { DialogProvider } from './src/context/DialogContext';
 import { ShowDialog } from './src/components/ShowDialog';
-import UpdateDialog from './src/components/UpdateDialog';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -86,7 +85,6 @@ function Navigation() {
   const themeColors = theme[currentTheme as ThemeColors];
   const insets = useSafeAreaInsets();
   const appState = useRef(AppState.currentState);
-  const [showUpdate, setShowUpdate] = useState(false);
 
   const customDefaultTheme = {
     ...DefaultTheme,
@@ -114,28 +112,23 @@ function Navigation() {
     },
   };
 
-  const handleUpdate = async () => {
-    await Updates.fetchUpdateAsync();
-    await Updates.reloadAsync();
-  };
-
   useEffect(() => {
     let isMounted = true;
     
-    const checkForUpdates = async () => {
+    const fetchUpdates = async () => {
       if (__DEV__ || !Updates.isEnabled) return;
       
       try {
         const update = await Updates.checkForUpdateAsync();
         if (!update.isAvailable || !isMounted) return;
         
-        setShowUpdate(true);
+        await Updates.fetchUpdateAsync();
       } catch (error) {
-        console.log('update_check_error');
+        console.log('update_fetch_error');
       }
     };
 
-    const updateTimer = setTimeout(checkForUpdates, 3000);
+    const updateTimer = setTimeout(fetchUpdates, 3000);
 
     const timer = setTimeout(() => {
       registerBackgroundFetchAsync().catch(error => {
@@ -234,11 +227,6 @@ function Navigation() {
         <StatusBar style="light" translucent />
         <RootNavigator />
         <ShowDialog />
-        <UpdateDialog
-          visible={showUpdate}
-          onClose={() => setShowUpdate(false)}
-          onUpdate={handleUpdate}
-        />
       </NavigationContainer>
   );
 }
