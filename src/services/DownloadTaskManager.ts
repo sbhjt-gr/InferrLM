@@ -234,10 +234,12 @@ export class DownloadTaskManager extends EventEmitter {
 
     try {
       const storedModel: StoredModel = {
+        id: `${modelName}-${Date.now()}`,
         name: modelName,
         path: downloadUrl,
         size: 0,
-        modified: new Date().toISOString()
+        modified: new Date().toISOString(),
+        downloaded: false,
       };
 
       const nativeTransferId = await backgroundDownloadService.initiateTransfer(
@@ -337,10 +339,12 @@ export class DownloadTaskManager extends EventEmitter {
   async ensureDownloadsAreRunning(): Promise<void> {
     try {
       const storedModels: StoredModel[] = Array.from(this.activeDownloads.values()).map(info => ({
+        id: `${info.modelName}-${Date.now()}`,
         name: info.modelName,
         path: info.url || '',
         size: info.totalBytes || 0,
         modified: new Date().toISOString(),
+        downloaded: false,
       }));
 
       await backgroundDownloadService.synchronizeWithActiveTransfers(storedModels);
