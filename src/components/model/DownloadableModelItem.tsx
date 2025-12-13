@@ -192,13 +192,32 @@ const DownloadableModelItem: React.FC<DownloadableModelItemProps> = ({
                 {model.size}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.browserDownloadButton}
-              onPress={() => handleBrowserDownload(model.huggingFaceLink)}
-            >
-              <MaterialCommunityIcons name="open-in-new" size={14} color={getBrowserDownloadTextColor(currentTheme)} style={{ marginRight: 4 }} />
-              <Text style={[styles.browserDownloadText, { color: getBrowserDownloadTextColor(currentTheme) }]}>Download in browser</Text>
-            </TouchableOpacity>
+            {model.modelType === ModelType.VISION && model.additionalFiles && model.additionalFiles.length > 0 ? (
+              <View style={styles.visionDownloadLinks}>
+                <TouchableOpacity
+                  style={styles.browserDownloadButton}
+                  onPress={() => handleBrowserDownload(model.huggingFaceLink)}
+                >
+                  <MaterialCommunityIcons name="open-in-new" size={14} color={getBrowserDownloadTextColor(currentTheme)} style={{ marginRight: 4 }} />
+                  <Text style={[styles.browserDownloadText, { color: getBrowserDownloadTextColor(currentTheme) }]}>Model</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.browserDownloadButton}
+                  onPress={() => handleBrowserDownload(model.additionalFiles![0].url)}
+                >
+                  <MaterialCommunityIcons name="open-in-new" size={14} color={getBrowserDownloadTextColor(currentTheme)} style={{ marginRight: 4 }} />
+                  <Text style={[styles.browserDownloadText, { color: getBrowserDownloadTextColor(currentTheme) }]}>Projector</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.browserDownloadButton}
+                onPress={() => handleBrowserDownload(model.huggingFaceLink)}
+              >
+                <MaterialCommunityIcons name="open-in-new" size={14} color={getBrowserDownloadTextColor(currentTheme)} style={{ marginRight: 4 }} />
+                <Text style={[styles.browserDownloadText, { color: getBrowserDownloadTextColor(currentTheme) }]}>Download in browser</Text>
+              </TouchableOpacity>
+            )}
           </View>
           
           {model.description && (
@@ -325,6 +344,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: 6,
+  },
+  visionDownloadLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   browserDownloadText: {
     fontSize: 13,
