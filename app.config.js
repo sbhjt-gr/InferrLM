@@ -12,9 +12,8 @@ export default {
     keywords: ["AI", "chat", "assistant", "machine learning", "language model", "artificial intelligence"],
     newArchEnabled: true,
     splash: {
-      image: "./assets/icon.png",
-      resizeMode: "cover",
-      
+      image: "./assets/splash.png",
+      resizeMode: "contain",
       backgroundColor: "#660880"
     },
     updates: {
