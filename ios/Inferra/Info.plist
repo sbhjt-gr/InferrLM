@@ -11,7 +11,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Inferra</string>
+    <string>InferrLM</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -44,7 +44,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>277</string>
+    <string>276</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
@@ -61,17 +61,17 @@
       <string>_http._tcp</string>
     </array>
     <key>NSCameraUsageDescription</key>
-    <string>Camera access enables direct file capture uploads and OCR analysis features inside Inferra.</string>
+    <string>Camera access enables direct file capture uploads and OCR analysis features inside InferrLM.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>Inferra uses local network access to share your AI chat interface with other devices on your WiFi network, allowing you to access your assistant from browsers on computers, tablets, or other phones.</string>
+    <string>InferrLM uses local network access to share your AI chat interface with other devices on your WiFi network, allowing you to access your assistant from browsers on computers, tablets, or other phones.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Inferra needs permission to save captured photos and generated images to your library.</string>
+    <string>InferrLM needs permission to save captured photos and generated images to your library.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Inferra needs access to your photo library to let you select images for analysis and OCR.</string>
+    <string>InferrLM needs access to your photo library to let you select images for analysis and OCR.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
