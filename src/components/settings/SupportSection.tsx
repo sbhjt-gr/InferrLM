@@ -64,10 +64,10 @@ const SupportSection = ({ onOpenLink, onNavigateToLicenses }: SupportSectionProp
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={[styles.settingText, { color: themeColors.text }]}>
-              Liked My App?
+              Liked Our App?
             </Text>
             <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
-              Rate my app 5 stars
+              Rate InferrLM 5 stars
             </Text>
           </View>
         </View>
@@ -84,10 +84,10 @@ const SupportSection = ({ onOpenLink, onNavigateToLicenses }: SupportSectionProp
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={[styles.settingText, { color: themeColors.text }]}>
-              GitHub Repository
+              Star on GitHub
             </Text>
             <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
-              Star my project on GitHub
+              View InferrLM on GitHub
             </Text>
           </View>
         </View>
