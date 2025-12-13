@@ -4,7 +4,7 @@ export function getHomepageHTML(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inferra API Documentation</title>
+  <title>InferrLM API Documentation</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -156,7 +156,7 @@ export function getHomepageHTML(): string {
 </head>
 <body>
   <div class="container">
-    <h1>Inferra API Documentation</h1>
+    <h1>InferrLM API Documentation</h1>
     <p class="subtitle">Complete API reference for local AI inference</p>
 
     <div class="nav">

@@ -50,10 +50,12 @@ export interface ModelInfo {
 }
 
 export interface StoredModel {
+  id: string;
   name: string;
   path: string;
   size: number;
   modified: string;
+  downloaded: boolean;
   isExternal?: boolean;
   modelType?: ModelType;
   capabilities?: string[];

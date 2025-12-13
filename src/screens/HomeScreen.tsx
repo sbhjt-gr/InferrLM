@@ -661,7 +661,7 @@ export default function HomeScreen({ route, navigation }: HomeScreenProps) {
       <AppHeader 
         onNewChat={startNewChat}
         showLogo={!isWideScreen}
-        title={isWideScreen ? '' : 'Inferra'}
+        title={isWideScreen ? '' : 'InferrLM'}
         rightButtons={
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity

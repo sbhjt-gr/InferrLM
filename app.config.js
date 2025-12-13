@@ -1,6 +1,6 @@
 export default {
   expo: {
-    name: "Inferra",
+    name: "InferrLM",
     slug: "inferra",
     owner: "subhajitgorai",
     version: "0.7.5",
@@ -12,9 +12,8 @@ export default {
     keywords: ["AI", "chat", "assistant", "machine learning", "language model", "artificial intelligence"],
     newArchEnabled: true,
     splash: {
-      image: "./assets/icon.png",
-      resizeMode: "cover",
-      
+      image: "./assets/splash.png",
+      resizeMode: "contain",
       backgroundColor: "#660880"
     },
     updates: {
@@ -29,7 +28,7 @@ export default {
       supportsTablet: true,
       requireFullScreen: false,
       bundleIdentifier: "com.gorai.inferra",
-      buildNumber: "275",
+      buildNumber: "276",
       runtimeVersion: "0.7.5",
       deploymentTarget: "17.0",
       infoPlist: {
@@ -37,10 +36,10 @@ export default {
           "fetch",
           "remote-notification"
         ],
-        NSCameraUsageDescription: "Camera access enables direct file capture uploads and OCR analysis features inside Inferra.",
-        NSPhotoLibraryUsageDescription: "Inferra needs access to your photo library to let you select images for analysis and OCR.",
-        NSPhotoLibraryAddUsageDescription: "Inferra needs permission to save captured photos and generated images to your library.",
-        NSLocalNetworkUsageDescription: "Inferra uses local network access to share your AI chat interface with other devices on your WiFi network, allowing you to access your assistant from browsers on computers, tablets, or other phones.",
+        NSCameraUsageDescription: "Camera access enables direct file capture uploads and OCR analysis features inside InferrLM.",
+        NSPhotoLibraryUsageDescription: "InferrLM needs access to your photo library to let you select images for analysis and OCR.",
+        NSPhotoLibraryAddUsageDescription: "InferrLM needs permission to save captured photos and generated images to your library.",
+        NSLocalNetworkUsageDescription: "InferrLM uses local network access to share your AI chat interface with other devices on your WiFi network, allowing you to access your assistant from browsers on computers, tablets, or other phones.",
         NSBonjourServices: ["_http._tcp"],
         UIStatusBarStyle: "UIStatusBarStyleDefault",
         UIViewControllerBasedStatusBarAppearance: false,
@@ -59,7 +58,7 @@ export default {
       scheme: "com.gorai.inferra"
     },
     android: {
-      versionCode: 275,
+      versionCode: 276,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#660880"

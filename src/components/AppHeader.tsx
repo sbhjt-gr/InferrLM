@@ -23,7 +23,7 @@ type AppHeaderProps = {
 };
 
 export default function AppHeader({ 
-  title = 'Inferra', 
+  title = 'InferrLM', 
   showBackButton = false,
   showLogo = true,
   onNewChat,

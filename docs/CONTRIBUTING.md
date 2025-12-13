@@ -1,6 +1,6 @@
-# Contributing to Inferra
+# Contributing to InferrLM
 
-Thank you for your interest in contributing to Inferra! This guide will help you understand how to contribute effectively to the project.
+Thank you for your interest in contributing to InferrLM! This guide will help you understand how to contribute effectively to the project.
 
 ## Getting Started
 
@@ -241,6 +241,6 @@ Your pull request should include:
 
 ## License
 
-By contributing to Inferra, you agree that your contributions will be licensed under the AGPL-3.0 License.
+By contributing to InferrLM, you agree that your contributions will be licensed under the AGPL-3.0 License.
 
-Thank you for contributing to Inferra!
+Thank you for contributing to InferrLM!

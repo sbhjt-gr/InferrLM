@@ -372,7 +372,7 @@ export default function LocalServerScreen() {
               </View>
               <View style={styles.settingTextContainer}>
                 <Text style={[styles.settingText, { color: themeColors.text }]}>
-                  Inferra Local Server
+                  InferrLM Local Server
                 </Text>
                 <View style={styles.statusRow}>
                   <View style={[styles.statusIndicator, { backgroundColor: getStatusColor() }]} />
@@ -423,7 +423,7 @@ export default function LocalServerScreen() {
               <TouchableOpacity style={styles.settingItem} onPress={() => {
                 Share.share({
                   message: serverStatus.signalingURL || '',
-                  title: 'Inferra Local Server'
+                  title: 'InferrLM Local Server'
                 });
               }}>
                 <View style={styles.settingLeft}>
@@ -607,7 +607,7 @@ export default function LocalServerScreen() {
                   What is this?
                 </Text>
                 <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
-                  Share your Inferra chat interface with other devices on your WiFi network. Perfect for accessing your AI assistant from computers, tablets, or other phones.
+                  Share your InferrLM chat interface with other devices on your WiFi network. Perfect for accessing your AI assistant from computers, tablets, or other phones.
                 </Text>
               </View>
             </View>

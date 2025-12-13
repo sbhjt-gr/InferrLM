@@ -538,10 +538,12 @@ export class BackgroundDownloadService {
       : event.progress ?? 0;
 
     const storedModel: StoredModel = {
+      id: `${modelName}-${Date.now()}`,
       name: modelName,
       path: event.url ?? '',
       size: totalBytes,
       modified: new Date().toISOString(),
+      downloaded: false,
     };
 
     const downloadJob: DownloadJob = {

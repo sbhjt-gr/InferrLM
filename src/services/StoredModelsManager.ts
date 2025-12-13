@@ -10,73 +10,75 @@ import { ModelType } from '../types/models';
 export class StoredModelsManager extends EventEmitter {
   private fileManager: FileManager;
   private readonly STORAGE_KEY = 'stored_models_list';
-  private isInitialized: boolean = false;
-  private isInitializing: boolean = false;
-  private initializationPromise: Promise<void> | null = null;
-  private opLock: Promise<void> = Promise.resolve();
+  private ready: boolean = false;
+  private starting: boolean = false;
+  private startPromise: Promise<void> | null = null;
+  private mutex: Promise<void> = Promise.resolve();
 
   constructor(fileManager: FileManager) {
     super();
     this.fileManager = fileManager;
   }
 
-  private async withLock<T>(op: () => Promise<T>): Promise<T> {
-    const prev = this.opLock;
-    let unlock: () => void;
-    this.opLock = new Promise(r => { unlock = r; });
+  private async lock<T>(fn: () => Promise<T>): Promise<T> {
+    const prev = this.mutex;
+    let release: () => void;
+    this.mutex = new Promise(r => { release = r; });
     await prev;
     try {
-      return await op();
+      return await fn();
     } finally {
-      unlock!();
+      release!();
     }
   }
 
-  private async validateFiles(models: StoredModel[]): Promise<StoredModel[]> {
-    const valid: StoredModel[] = [];
+  private async fileExists(path: string): Promise<boolean> {
+    try {
+      const info = await FileSystem.getInfoAsync(path);
+      return info.exists;
+    } catch {
+      return false;
+    }
+  }
+
+  private async confirmFilesExist(models: StoredModel[]): Promise<StoredModel[]> {
+    const result: StoredModel[] = [];
     for (const model of models) {
-      try {
-        const info = await FileSystem.getInfoAsync(model.path);
-        if (info.exists) {
-          valid.push(model);
-        } else {
-          console.log('file_missing', model.name);
-        }
-      } catch {
-        console.log('validate_error', model.name);
+      const exists = await this.fileExists(model.path);
+      if (exists) {
+        result.push(model);
+      } else {
+        console.log('model_file_missing', model.name);
       }
     }
-    return valid;
+    return result;
   }
 
   async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      console.log('manager_already_initialized');
+    if (this.ready) {
+      return;
+    }
+    if (this.starting) {
+      await this.startPromise;
       return;
     }
 
-    if (this.isInitializing) {
-      console.log('manager_init_in_progress');
-      await this.initializationPromise;
-      return;
-    }
-
-    this.isInitializing = true;
-    this.initializationPromise = (async () => {
-      console.log('manager_init_start');
+    this.starting = true;
+    this.startPromise = (async () => {
+      console.log('models_init_start');
       try {
-        await this.syncStorageWithFileSystem();
-        this.isInitialized = true;
-        console.log('manager_init_complete');
-      } catch (error) {
-        console.log('manager_init_error', error);
-        throw error;
+        await this.syncOnLaunch();
+        this.ready = true;
+        console.log('models_init_done');
+      } catch (err) {
+        console.log('models_init_err', err);
+        throw err;
       } finally {
-        this.isInitializing = false;
+        this.starting = false;
       }
     })();
 
-    await this.initializationPromise;
+    await this.startPromise;
   }
 
   async getStoredModels(): Promise<StoredModel[]> {
@@ -95,76 +97,81 @@ export class StoredModelsManager extends EventEmitter {
     return [];
   }
 
-  private async scanFileSystemAndUpdateStorage(): Promise<StoredModel[]> {
-    console.log('scan_filesystem_start');
-    try {
-      const baseDir = this.fileManager.getBaseDir();
-      console.log('base_dir', baseDir);
+  private async scanAndPersist(): Promise<StoredModel[]> {
+    return this.lock(async () => {
+      console.log('scan_filesystem_start');
+      try {
+        const baseDir = this.fileManager.getBaseDir();
+        console.log('base_dir', baseDir);
 
-      const dirInfo = await FileSystem.getInfoAsync(baseDir);
-      if (!dirInfo.exists) {
-        console.log('dir_not_exists');
-        await FileSystem.makeDirectoryAsync(baseDir, { intermediates: true });
+        const dirInfo = await FileSystem.getInfoAsync(baseDir);
+        if (!dirInfo.exists) {
+          console.log('dir_not_exists');
+          await FileSystem.makeDirectoryAsync(baseDir, { intermediates: true });
+          const emptyModels: StoredModel[] = [];
+          await this.saveModelsToStorage(emptyModels);
+          return emptyModels;
+        }
+
+        console.log('reading_directory');
+        const dir = await FileSystem.readDirectoryAsync(baseDir);
+        console.log('files_found', dir.length);
+
+        const models: StoredModel[] = [];
+        if (dir.length > 0) {
+          console.log('processing_files');
+          for (const name of dir) {
+            try {
+              const path = `${baseDir}/${name}`;
+              const fileInfo = await FileSystem.getInfoAsync(path, { size: true });
+              if (!fileInfo.exists || (fileInfo as any).isDirectory) {
+                continue;
+              }
+
+              const size = (fileInfo as any).size || 0;
+              const modified = new Date().toISOString();
+
+              const capabilities = detectVisionCapabilities(name);
+              const modelType = capabilities.isProjection
+                ? ModelType.PROJECTION
+                : capabilities.isVision
+                  ? ModelType.VISION
+                  : ModelType.LLM;
+
+              models.push({
+                id: `${name}-${Date.now()}`,
+                name,
+                path,
+                size,
+                modified,
+                isExternal: false,
+                downloaded: true,
+                modelType,
+                capabilities: capabilities.capabilities,
+                supportsMultimodal: capabilities.isVision,
+                compatibleProjectionModels: capabilities.compatibleProjections,
+                defaultProjectionModel: capabilities.defaultProjection,
+              });
+            } catch (fileError) {
+              console.log('scan_file_error', name, fileError);
+            }
+          }
+        }
+
+        console.log('saving_to_storage', models.length);
+        await this.saveModelsToStorage(models);
+        console.log('scan_complete');
+        return models;
+      } catch (error) {
+        console.log('scan_error', error);
         const emptyModels: StoredModel[] = [];
         await this.saveModelsToStorage(emptyModels);
         return emptyModels;
       }
-
-      console.log('reading_directory');
-      const dir = await FileSystem.readDirectoryAsync(baseDir);
-      console.log('files_found', dir.length);
-
-      let models: StoredModel[] = [];
-      if (dir.length > 0) {
-        console.log('processing_files');
-        models = await Promise.all(
-          dir.map(async (name) => {
-            const path = `${baseDir}/${name}`;
-            const fileInfo = await FileSystem.getInfoAsync(path, { size: true });
-
-            let size = 0;
-            if (fileInfo.exists) {
-              size = (fileInfo as any).size || 0;
-            }
-
-            const modified = new Date().toISOString();
-
-            const capabilities = detectVisionCapabilities(name);
-            const modelType = capabilities.isProjection
-              ? ModelType.PROJECTION
-              : capabilities.isVision
-                ? ModelType.VISION
-                : ModelType.LLM;
-
-            return {
-              name,
-              path,
-              size,
-              modified,
-              isExternal: false,
-              modelType,
-              capabilities: capabilities.capabilities,
-              supportsMultimodal: capabilities.isVision,
-              compatibleProjectionModels: capabilities.compatibleProjections,
-              defaultProjectionModel: capabilities.defaultProjection,
-            };
-          })
-        );
-      }
-
-      console.log('saving_to_storage', models.length);
-      await this.saveModelsToStorage(models);
-      console.log('scan_complete');
-      return models;
-    } catch (error) {
-      console.log('scan_error', error);
-      const emptyModels: StoredModel[] = [];
-      await this.saveModelsToStorage(emptyModels);
-      return emptyModels;
-    }
+    });
   }
 
-  private async syncStorageWithFileSystem(): Promise<void> {
+  private async syncOnLaunch(): Promise<void> {
     console.log('sync_start');
     try {
       const baseDir = this.fileManager.getBaseDir();
@@ -177,20 +184,19 @@ export class StoredModelsManager extends EventEmitter {
         return;
       }
 
-      const filesOnDisk = await FileSystem.readDirectoryAsync(baseDir);
       const storedData = await AsyncStorage.getItem(this.STORAGE_KEY);
       const storedModels: StoredModel[] = storedData ? JSON.parse(storedData) : [];
       
-      const validated = await this.validateFiles(storedModels);
-      const storedNames = new Set(validated.map(m => m.name));
-      const diskHasUnknown = filesOnDisk.some(f => !storedNames.has(f));
-      
-      if (diskHasUnknown || validated.length === 0 && filesOnDisk.length > 0) {
-        console.log('sync_disk_has_unknown_files');
-        await this.scanFileSystemAndUpdateStorage();
-        return;
+      if (storedModels.length === 0) {
+        const filesOnDisk = await FileSystem.readDirectoryAsync(baseDir);
+        if (filesOnDisk.length > 0) {
+          console.log('sync_empty_storage_but_files_exist');
+          await this.scanAndPersist();
+          return;
+        }
       }
-      
+
+      const validated = await this.confirmFilesExist(storedModels);
       if (validated.length !== storedModels.length) {
         console.log('sync_removed_missing', storedModels.length - validated.length);
         await this.saveModelsToStorage(validated);
@@ -199,7 +205,7 @@ export class StoredModelsManager extends EventEmitter {
       console.log('sync_complete');
     } catch (error) {
       console.log('sync_error', error);
-      await this.scanFileSystemAndUpdateStorage();
+      await this.scanAndPersist();
     }
   }
 
@@ -215,7 +221,7 @@ export class StoredModelsManager extends EventEmitter {
   }
 
   async deleteModel(path: string): Promise<void> {
-    return this.withLock(async () => {
+    return this.lock(async () => {
       const dir = path.substring(0, path.lastIndexOf('/'));
       const baseName = path.substring(path.lastIndexOf('/') + 1);
       const projectorName = baseName.replace('.gguf', '-mmproj-f16.gguf');
@@ -250,8 +256,59 @@ export class StoredModelsManager extends EventEmitter {
     });
   }
 
+  async registerModel(name: string, path: string, size: number): Promise<StoredModel> {
+    return this.lock(async () => {
+      const current = await this.getStoredModels();
+      const exists = current.some(m => m.name === name || m.path === path);
+      if (exists) {
+        throw new Error('Model already registered');
+      }
+
+      const capabilities = detectVisionCapabilities(name);
+      const modelType = capabilities.isProjection
+        ? ModelType.PROJECTION
+        : capabilities.isVision
+          ? ModelType.VISION
+          : ModelType.LLM;
+
+      const model: StoredModel = {
+        id: `${name}-${Date.now()}`,
+        name,
+        path,
+        size,
+        modified: new Date().toISOString(),
+        isExternal: false,
+        downloaded: true,
+        modelType,
+        capabilities: capabilities.capabilities,
+        supportsMultimodal: capabilities.isVision,
+        compatibleProjectionModels: capabilities.compatibleProjections,
+        defaultProjectionModel: capabilities.defaultProjection,
+      };
+
+      const updated = [...current, model];
+      await this.saveModelsToStorage(updated);
+      this.emit('modelsChanged');
+      return model;
+    });
+  }
+
+  async setDownloadStatus(name: string, downloaded: boolean): Promise<void> {
+    return this.lock(async () => {
+      const current = await this.getStoredModels();
+      const idx = current.findIndex(m => m.name === name);
+      if (idx === -1) {
+        console.log('model_not_found', name);
+        return;
+      }
+      current[idx] = { ...current[idx], downloaded };
+      await this.saveModelsToStorage(current);
+      this.emit('modelsChanged');
+    });
+  }
+
   public async refresh(): Promise<void> {
-    await this.scanFileSystemAndUpdateStorage();
+    await this.scanAndPersist();
     this.emit('modelsChanged');
   }
 
@@ -268,44 +325,42 @@ export class StoredModelsManager extends EventEmitter {
   }
 
   async reloadStoredModels(): Promise<StoredModel[]> {
-    return await this.scanFileSystemAndUpdateStorage();
+    return await this.scanAndPersist();
   }
 
   async refreshStoredModels(): Promise<void> {
     try {
       const storedModels = await this.getStoredModels();
-      const storedModelNames = storedModels.map(model => model.name);
+      const storedPaths = new Set(storedModels.map(m => m.path));
       
       const baseDir = this.fileManager.getBaseDir();
-      const modelDirContents = await FileSystem.readDirectoryAsync(baseDir);
+      const files = await FileSystem.readDirectoryAsync(baseDir);
       
-      for (const filename of modelDirContents) {
-        if (!storedModelNames.includes(filename)) {
-          const filePath = `${baseDir}/${filename}`;
-          const fileInfo = await FileSystem.getInfoAsync(filePath, { size: true });
-          
-          if (fileInfo.exists) {
-            const downloadId = Math.floor(Math.random() * 1000) + 1;
-            this.emit('downloadProgress', {
-              modelName: filename,
-              progress: 100,
-              bytesDownloaded: (fileInfo as any).size || 0,
-              totalBytes: (fileInfo as any).size || 0,
-              status: 'completed',
-              downloadId
-            });
-            
-            await this.scanFileSystemAndUpdateStorage();
-            this.emit('modelsChanged');
-          }
+      for (const name of files) {
+        const filePath = `${baseDir}/${name}`;
+        if (storedPaths.has(filePath)) {
+          continue;
+        }
+        
+        const info = await FileSystem.getInfoAsync(filePath, { size: true });
+        if (!info.exists || (info as any).isDirectory) {
+          continue;
+        }
+        
+        try {
+          await this.registerModel(name, filePath, (info as any).size || 0);
+          console.log('auto_registered', name);
+        } catch {
+          console.log('register_skipped', name);
         }
       }
     } catch (error) {
+      console.log('refresh_error', error);
     }
   }
 
   async linkExternalModel(uri: string, fileName: string): Promise<void> {
-    return this.withLock(async () => {
+    return this.lock(async () => {
       const baseDir = this.fileManager.getBaseDir();
       const destPath = `${baseDir}/${fileName}`;
       
@@ -344,11 +399,13 @@ export class StoredModelsManager extends EventEmitter {
           : ModelType.LLM;
 
       const newModel: StoredModel = {
+        id: `${fileName}-${Date.now()}`,
         name: fileName,
         path: destPath,
         size,
         modified: new Date().toISOString(),
         isExternal: true,
+        downloaded: true,
         modelType,
         capabilities: capabilities.capabilities,
         supportsMultimodal: capabilities.isVision,
