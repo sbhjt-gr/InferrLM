@@ -553,7 +553,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
     if (!isLoggedIn && !enableRemoteModels) {
       showDialog(
         'Authentication Required',
-        'Inferra will require internet access and you need an account to enable remote models.',
+        'InferrLM will require internet access and you need an account to enable remote models.',
         [
           <Button key="cancel" onPress={hideDialog}>Cancel</Button>,
           <Button 

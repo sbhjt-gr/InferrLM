@@ -1,6 +1,6 @@
 export default {
   expo: {
-    name: "Inferra",
+    name: "InferrLM",
     slug: "inferra",
     owner: "subhajitgorai",
     version: "0.7.5",
@@ -37,10 +37,10 @@ export default {
           "fetch",
           "remote-notification"
         ],
-        NSCameraUsageDescription: "Camera access enables direct file capture uploads and OCR analysis features inside Inferra.",
-        NSPhotoLibraryUsageDescription: "Inferra needs access to your photo library to let you select images for analysis and OCR.",
-        NSPhotoLibraryAddUsageDescription: "Inferra needs permission to save captured photos and generated images to your library.",
-        NSLocalNetworkUsageDescription: "Inferra uses local network access to share your AI chat interface with other devices on your WiFi network, allowing you to access your assistant from browsers on computers, tablets, or other phones.",
+        NSCameraUsageDescription: "Camera access enables direct file capture uploads and OCR analysis features inside InferrLM.",
+        NSPhotoLibraryUsageDescription: "InferrLM needs access to your photo library to let you select images for analysis and OCR.",
+        NSPhotoLibraryAddUsageDescription: "InferrLM needs permission to save captured photos and generated images to your library.",
+        NSLocalNetworkUsageDescription: "InferrLM uses local network access to share your AI chat interface with other devices on your WiFi network, allowing you to access your assistant from browsers on computers, tablets, or other phones.",
         NSBonjourServices: ["_http._tcp"],
         UIStatusBarStyle: "UIStatusBarStyleDefault",
         UIViewControllerBasedStatusBarAppearance: false,

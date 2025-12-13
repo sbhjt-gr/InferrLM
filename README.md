@@ -1,14 +1,14 @@
 
-## Inferra
+## InferrLM
 <p>
   <a href="" target="_blank"><img src="https://img.shields.io/badge/App_Version-0.7.5-6a1b9a" alt="App Version 0.7.5"></a>
   <a href="https://opensource.org/licenses/AGPL-3.0" target="_blank"><img src="https://img.shields.io/badge/License-AGPL--3.0-orange" alt="License: AGPL-3.0"></a>
 </p>
 <p>
-  <img src="https://lh3.googleusercontent.com/XTXWqqQPgW4KM6fALBRViYQQPR-qobXzGCu7pNWM8ZYJ8ymbKKh2v_6n-jFyDg5mtu2Z5tsVv23RJGDTamjjzBY" alt="Inferra Header" width="400">
+  <img src="https://lh3.googleusercontent.com/XTXWqqQPgW4KM6fALBRViYQQPR-qobXzGCu7pNWM8ZYJ8ymbKKh2v_6n-jFyDg5mtu2Z5tsVv23RJGDTamjjzBY" alt="InferrLM Header" width="400">
 </p>
 
-Inferra is a mobile application that brings LLMs & SLMs directly to your Android & iOS device and lets your device act as a local server. Cloud-based models like Claude, DeepSeek, Gemini and ChatGPT are also supported. File attachments with RAG are also well-supported for local models.
+InferrLM is a mobile application that brings LLMs & SLMs directly to your Android & iOS device and lets your device act as a local server. Cloud-based models like Claude, DeepSeek, Gemini and ChatGPT are also supported. File attachments with RAG are also well-supported for local models.
 
 [<img src="https://github.com/user-attachments/assets/bdc18fc5-5a99-410c-b383-eaf9c737176e" alt="Get it on Google Play" width="150">](https://play.google.com/store/apps/details?id=com.gorai.ragionare)
 
@@ -20,7 +20,7 @@ If you want to support me and the development of this project, you can donate to
 
 ### Core Inference
 - Local inference through llama.cpp with support for GGUF models. More inference engines are planned for future releases. You can become a contributor by implementing additional ones. See the [contributions guide](#contributing) below.
-- Seamless integration with cloud-based models from OpenAI, Gemini, Anthropic and DeepSeek. You need your own API keys and an Inferra registered account for remote models. Using remote models is optional.
+- Seamless integration with cloud-based models from OpenAI, Gemini, Anthropic and DeepSeek. You need your own API keys and an InferrLM registered account for remote models. Using remote models is optional.
 - Customizable base URLs for OpenAI-compatible providers like Ollama, LM Studio, OpenRouter, Groq and Together AI. This allows you to use local inference servers or alternative API endpoints.
 - Apple Foundation support for compatible iOS devices, for Apple Intelligence supported devices when available.
 
@@ -36,7 +36,7 @@ If you want to support me and the development of this project, you can donate to
 ### Local Server
 - Built-in HTTP server that exposes REST APIs for accessing your models from any device on your WiFi network.
 - Server can be started from the Server tab with configuration options for network access and auto-start.
-- Share your Inferra chat interface with computers, tablets, or other devices through a simple URL or QR code.
+- Share your InferrLM chat interface with computers, tablets, or other devices through a simple URL or QR code.
 - Full API documentation is available [HERE](docs/REST_APIs.md) and at the server homepage when running.
 - A command-line interface tool is available at [github.com/sbhjt-gr/inferra-cli](https://github.com/sbhjt-gr/inferra-cli) that demonstrates how to build applications using these REST APIs.
 
@@ -93,19 +93,19 @@ If you want to contribute or just try to run it locally, follow the guide below.
 
 ## Command Line Interface
 
-The inferra-cli tool is a terminal-based client that connects to your Inferra server and provides an interactive chat interface directly from your command line. This serves as both a functional tool and a reference implementation for developers who want to build applications using the Inferra REST APIs.
+The inferrlm tool is a terminal-based client that connects to your InferrLM server and provides an interactive chat interface directly from your command line. This serves as both a functional tool and a reference implementation for developers who want to build applications using the InferrLM REST APIs.
 
 The CLI is built with React and Ink to provide a modern terminal UI with features like streaming responses, conversation history, and an interactive setup flow. You can find the complete source code and installation instructions at [github.com/sbhjt-gr/inferra-cli](https://github.com/sbhjt-gr/inferra-cli).
 
-To get started with the CLI, make sure your Inferra server is running on your mobile device, then install the CLI tool and follow the setup instructions in its repository.
+To get started with the CLI, make sure your InferrLM server is running on your mobile device, then install the CLI tool and follow the setup instructions in its repository.
 
 ## REST API
 
-Inferra includes a built-in HTTP server that exposes REST APIs for accessing your local models from any device on your WiFi network. This allows you to integrate Inferra with other applications, scripts, or services.
+InferrLM includes a built-in HTTP server that exposes REST APIs for accessing your local models from any device on your WiFi network. This allows you to integrate InferrLM with other applications, scripts, or services.
 
 ### Starting the Server
 
-1. Open the Inferra app
+1. Open the InferrLM app
 2. Navigate to the Server tab
 3. Toggle the server switch to start it
 4. The server URL will be displayed (typically `http://YOUR_DEVICE_IP:8889`)
@@ -161,7 +161,7 @@ Read our [Contributing Guide](docs/CONTRIBUTING.md) for detailed contribution gu
 ## Acknowledgments
 
 - [llama.cpp](https://github.com/ggerganov/llama.cpp) - The default underlying engine for running local LLMs and it's the only one that's been implemented yet.
-- [inferra-llama.rn](https://github.com/sbhjt-gr/inferra-llama.rn) - The customized React Native adapter which provides the bridge for llama.cpp. Originally forked and self-hosted from [llama.rn](https://github.com/mybigday/llama.rn) for updating llama.cpp more frequently.
+- [inferrlm-llama.rn](https://github.com/sbhjt-gr/inferra-llama.rn) - The customized React Native adapter which provides the bridge for llama.cpp. Originally forked and self-hosted from [llama.rn](https://github.com/mybigday/llama.rn) for updating llama.cpp more frequently.
 - [react-native-rag](https://github.com/software-mansion-labs/react-native-rag) + [@langchain/textsplitters](https://github.com/langchain-ai/langchainjs) - RAG implementation for React Native that powers the document retrieval and ingestion features using LangChain.
 - [react-native-ai](https://github.com/callstackincubator/ai) - Adaptor that provides Apple Foundation bridge from Swift to JavaScript.
 - If someone thinks they also need to be mentioned here, please let me know.
@@ -171,7 +171,7 @@ Read our [Contributing Guide](docs/CONTRIBUTING.md) for detailed contribution gu
 - **React Native + Expo**: For cross-platform support.
 - **TypeScript**: The syntactical superset of JavaScript, widely used for React Development.
 - **Firebase**: For authentication, Firestore database, and cloud services.
-- **inferra-llama**: Custom llama.cpp bridge for local inference originally maintained by <a href="https://www.bricks.tools/" target="_blank">BRICS</a>.
+- **inferrlm-llama**: Custom llama.cpp bridge for local inference originally maintained by <a href="https://www.bricks.tools/" target="_blank">BRICS</a>.
 - **React Navigation**: For navigation and routing.
 - **React Native Paper**: Used for many Material Design UI components, although the whole UI is not purely based on the Material design.
 - **React Native ML Kit**: For on-device text recognition and OCR.

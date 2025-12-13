@@ -1,12 +1,12 @@
-# Inferra REST API Documentation
+# InferrLM REST API Documentation
 
-Complete API reference for Inferra's local HTTP server that exposes AI inference capabilities over your WiFi network.
+Complete API reference for InferrLM's local HTTP server that exposes AI inference capabilities over your WiFi network.
 
 ## Getting Started
 
 ### Starting the Server
 
-1. Open the Inferra app on your device
+1. Open the InferrLM app on your device
 2. Navigate to the **Server** tab
 3. Toggle the server switch to start it
 4. Your server URL will be displayed (typically `http://YOUR_DEVICE_IP:8889`)
@@ -40,14 +40,14 @@ Every request that generates text includes a `model` string that determines whic
 
 | Model value | Routed backend | Notes |
 |-------------|----------------|-------|
-| Stored model name (for example `llama-3.2-1b`) | Local GGUF running on-device | Download the GGUF via the Inferra app and load it if you plan to stream responses repeatedly. |
+| Stored model name (for example `llama-3.2-1b`) | Local GGUF running on-device | Download the GGUF via the InferrLM app and load it if you plan to stream responses repeatedly. |
 | `apple-foundation` | Apple Intelligence Foundation model | Available on iOS 26+ devices that have enabled Apple Foundation inside the app (`/api/models/apple-foundation`). |
 | `gemini` | Google Gemini via your API key | Configure with `/api/models/remote` (`provider: "gemini"`) and enable remote models before sending requests. |
 | `chatgpt` | OpenAI ChatGPT or GPT-4o | Configure with `provider: "chatgpt"` plus your OpenAI key. |
 | `claude` | Anthropic Claude | Configure with `provider: "claude"` and an Anthropic key. |
 | `deepseek` | DeepSeek API | Configure with `provider: "deepseek"` and an API key. |
 
-Remote providers share the same NDJSON streaming responses as local models. If remote models are disabled or an API key has not been saved, the server responds with `remote_models_disabled` or `api_key_missing`, so make sure the Inferra settings page shows the provider as configured before calling `/api/chat` or `/api/generate`.
+Remote providers share the same NDJSON streaming responses as local models. If remote models are disabled or an API key has not been saved, the server responds with `remote_models_disabled` or `api_key_missing`, so make sure the InferrLM settings page shows the provider as configured before calling `/api/chat` or `/api/generate`.
 
 ---
 
@@ -891,22 +891,22 @@ curl http://YOUR_DEVICE_IP:8889/api/ps
 
 ## Example Applications
 
-### Inferra CLI
+### InferrLM CLI
 
-The Inferra CLI is a command-line interface tool that demonstrates how to build applications using these REST APIs. It provides a fully functional terminal-based chat interface with streaming support, conversation history, and an interactive setup flow.
+The InferrLM CLI is a command-line interface tool that demonstrates how to build applications using these REST APIs. It provides a fully functional terminal-based chat interface with streaming support, conversation history, and an interactive setup flow.
 
-The CLI is built using React and Ink for the terminal UI, with TypeScript for type safety. It connects to your Inferra server and allows you to chat with your local models directly from the command line. This serves as a practical reference implementation for developers who want to integrate Inferra into their own applications.
+The CLI is built using React and Ink for the terminal UI, with TypeScript for type safety. It connects to your InferrLM server and allows you to chat with your local models directly from the command line. This serves as a practical reference implementation for developers who want to integrate InferrLM into their own applications.
 
-You can find the complete source code at [github.com/sbhjt-gr/inferra-cli](https://github.com/sbhjt-gr/inferra-cli). The implementation shows how to handle streaming responses, manage conversation state, and provide a smooth user experience when working with the Inferra APIs.
+You can find the complete source code at [github.com/sbhjt-gr/inferra-cli](https://github.com/sbhjt-gr/inferra-cli). The implementation shows how to handle streaming responses, manage conversation state, and provide a smooth user experience when working with the InferrLM APIs.
 
-To use the CLI, start your Inferra server on your mobile device, then run the CLI tool on any computer connected to the same WiFi network. The tool will guide you through connecting to your server and selecting a model to chat with.
+To use the CLI, start your InferrLM server on your mobile device, then run the CLI tool on any computer connected to the same WiFi network. The tool will guide you through connecting to your server and selecting a model to chat with.
 
 ---
 
 ## Additional Resources
 
-- [Inferra GitHub Repository](https://github.com/sbhjt-gr/inferra)
-- [Inferra CLI Tool](https://github.com/sbhjt-gr/inferra-cli)
+- [InferrLM GitHub Repository](https://github.com/sbhjt-gr/inferra)
+- [InferrLM CLI Tool](https://github.com/sbhjt-gr/inferra-cli)
 - [Contributing Guide](CONTRIBUTING.md)
 - [License](../LICENSE)
 

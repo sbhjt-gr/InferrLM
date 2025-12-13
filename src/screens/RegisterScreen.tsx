@@ -271,7 +271,7 @@ export default function RegisterScreen({ navigation, route }: RegisterScreenProp
                 style={styles.logoImage}
               />
               <Text style={styles.logoText} variant="headlineMedium">
-                Join Inferra
+                Join InferrLM
               </Text>
               <Text style={styles.subtitle} variant="bodyMedium">
                 Create your account to get started
