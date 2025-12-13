@@ -1,11 +1,11 @@
 
-## InferrLM
+## InferrLM (Previously Inferra)
 <p>
   <a href="" target="_blank"><img src="https://img.shields.io/badge/App_Version-0.7.5-6a1b9a" alt="App Version 0.7.5"></a>
   <a href="https://opensource.org/licenses/AGPL-3.0" target="_blank"><img src="https://img.shields.io/badge/License-AGPL--3.0-orange" alt="License: AGPL-3.0"></a>
 </p>
 <p>
-  <img src="https://lh3.googleusercontent.com/XTXWqqQPgW4KM6fALBRViYQQPR-qobXzGCu7pNWM8ZYJ8ymbKKh2v_6n-jFyDg5mtu2Z5tsVv23RJGDTamjjzBY" alt="InferrLM Header" width="400">
+  <img src="assets/source/InferrLM-header.jpg" alt="InferrLM Header" width="600">
 </p>
 
 InferrLM is a mobile application that brings LLMs & SLMs directly to your Android & iOS device and lets your device act as a local server. Cloud-based models like Claude, DeepSeek, Gemini and ChatGPT are also supported. File attachments with RAG are also well-supported for local models.
@@ -77,114 +77,3 @@ If you want to contribute or just try to run it locally, follow the guide below.
    ```
 
 3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Configure your API keys and Firebase settings as shown in app.config.json
-   ```
-
-4. **Run on device or emulator**
-   ```bash
-   # For Android
-   npx expo run:android
-   
-   # For iOS
-   npx expo run:ios
-   ```
-
-## Command Line Interface
-
-The inferrlm tool is a terminal-based client that connects to your InferrLM server and provides an interactive chat interface directly from your command line. This serves as both a functional tool and a reference implementation for developers who want to build applications using the InferrLM REST APIs.
-
-The CLI is built with React and Ink to provide a modern terminal UI with features like streaming responses, conversation history, and an interactive setup flow. You can find the complete source code and installation instructions at [github.com/sbhjt-gr/inferra-cli](https://github.com/sbhjt-gr/inferra-cli).
-
-To get started with the CLI, make sure your InferrLM server is running on your mobile device, then install the CLI tool and follow the setup instructions in its repository.
-
-## REST API
-
-InferrLM includes a built-in HTTP server that exposes REST APIs for accessing your local models from any device on your WiFi network. This allows you to integrate InferrLM with other applications, scripts, or services.
-
-### Starting the Server
-
-1. Open the InferrLM app
-2. Navigate to the Server tab
-3. Toggle the server switch to start it
-4. The server URL will be displayed (typically `http://YOUR_DEVICE_IP:8889`)
-
-### API Documentation
-
-Once the server is running, you can access the complete API documentation by opening the server URL in any web browser. The documentation includes:
-
-- Chat and completion endpoints
-- Model management operations
-- RAG and embeddings APIs
-- Server configuration and status
-
-For detailed API reference, see the [REST API Documentation](docs/REST_APIs.md).
-
-### Example Usage
-
-```bash
-# Chat with a model
-curl -X POST http://YOUR_DEVICE_IP:8889/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama-3.2-1b",
-    "messages": [{"role": "user", "content": "Hello!"}],
-    "stream": false
-  }'
-
-# List available models
-curl http://YOUR_DEVICE_IP:8889/api/tags
-
-# Ingest a document for RAG
-curl -X POST http://YOUR_DEVICE_IP:8889/api/files/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Your document content here"}'
-```
-
-## License
-
-This project is distributed under the AGPL-3.0 License. Please read it [here](https://github.com/sbhjt-gr/inferra/blob/main/LICENSE). Any modifications must adhere to the rules of this LICENSE.
-
-## Contributing
-
-Contributions are welcome! Before starting work:
-
-1. Find an issue in the [issues](https://github.com/sbhjt-gr/inferra/issues) tab or create a new one
-2. Comment on the issue to express your interest
-3. Wait to be assigned before starting work
-
-When proposing new features, clearly explain what it is, why it's useful, and how you plan to implement it.
-
-Read our [Contributing Guide](docs/CONTRIBUTING.md) for detailed contribution guidelines, code standards, and best practices. 
-
-## Acknowledgments
-
-- [llama.cpp](https://github.com/ggerganov/llama.cpp) - The default underlying engine for running local LLMs and it's the only one that's been implemented yet.
-- [inferrlm-llama.rn](https://github.com/sbhjt-gr/inferra-llama.rn) - The customized React Native adapter which provides the bridge for llama.cpp. Originally forked and self-hosted from [llama.rn](https://github.com/mybigday/llama.rn) for updating llama.cpp more frequently.
-- [react-native-rag](https://github.com/software-mansion-labs/react-native-rag) + [@langchain/textsplitters](https://github.com/langchain-ai/langchainjs) - RAG implementation for React Native that powers the document retrieval and ingestion features using LangChain.
-- [react-native-ai](https://github.com/callstackincubator/ai) - Adaptor that provides Apple Foundation bridge from Swift to JavaScript.
-- If someone thinks they also need to be mentioned here, please let me know.
-
-## Tech Stack
-
-- **React Native + Expo**: For cross-platform support.
-- **TypeScript**: The syntactical superset of JavaScript, widely used for React Development.
-- **Firebase**: For authentication, Firestore database, and cloud services.
-- **inferrlm-llama**: Custom llama.cpp bridge for local inference originally maintained by <a href="https://www.bricks.tools/" target="_blank">BRICS</a>.
-- **React Navigation**: For navigation and routing.
-- **React Native Paper**: Used for many Material Design UI components, although the whole UI is not purely based on the Material design.
-- **React Native ML Kit**: For on-device text recognition and OCR.
-- **react-native-tcp-socket**: For HTTP server implementation and network communication.
-- **ESLint**: For code quality.
-- **Some Expo Modules**: For camera, file system, notifications, device APIs etc.
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=sbhjt-gr/inferra&type=Date)](https://star-history.com/#sbhjt-gr/inferra&Date)
-
----
-
-<p align="center">
-  <sub>Star this repository if you find it useful!</sub>
-</p>
