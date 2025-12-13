@@ -13,7 +13,8 @@ export default {
     newArchEnabled: true,
     splash: {
       image: "./assets/splash.png",
-      resizeMode: "contain",
+      resizeMode: "cover",
+      
       backgroundColor: "#660880"
     },
     updates: {
@@ -141,7 +142,7 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/icon.png",
+          image: "./assets/splash.png",
           imageWidth: 200,
           resizeMode: "cover",
           backgroundColor: "#660880"
