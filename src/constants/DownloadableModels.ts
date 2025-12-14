@@ -2,46 +2,46 @@ import { DownloadableModel } from "../components/model/DownloadableModelItem";
 import { ModelType } from "../types/models";
 
 export const DOWNLOADABLE_MODELS: DownloadableModel[] = [
-  {
-    "name": "Ministral 3 3B Instruct",
-    "description": "Mistral's compact vision-language model with 256K context, multilingual support, and strong adherence to system prompts.",
-    "size": "2.15 GB",
-    "huggingFaceLink": "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/resolve/main/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
-    "licenseLink": "https://www.apache.org/licenses/LICENSE-2.0",
-    "modelFamily": "3 Billion",
-    "quantization": "Q4_K_M",
-    "tags": ["vision", "fastest", "recommended"],
-    "modelType": ModelType.VISION,
-    "capabilities": ["vision", "text"],
-    "supportsMultimodal": true,
-    "additionalFiles": [
-      {
-        "name": "Ministral-3-3B-Instruct-2512-BF16-mmproj.gguf",
-        "url": "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/resolve/main/Ministral-3-3B-Instruct-2512-BF16-mmproj.gguf",
-        "description": "Multimodal projector for Ministral 3 3B"
-      }
-    ]
-  },
-  {
-    "name": "Ministral 3 8B Reasoning",
-    "description": "Mistral's reasoning model with vision capabilities, optimized for complex multi-step reasoning, math, and coding tasks.",
-    "size": "5.2 GB",
-    "huggingFaceLink": "https://huggingface.co/mistralai/Ministral-3-8B-Reasoning-2512-GGUF/resolve/main/Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf",
-    "licenseLink": "https://www.apache.org/licenses/LICENSE-2.0",
-    "modelFamily": "8 Billion",
-    "quantization": "Q4_K_M",
-    "tags": ["reasoning", "vision"],
-    "modelType": ModelType.VISION,
-    "capabilities": ["vision", "text"],
-    "supportsMultimodal": true,
-    "additionalFiles": [
-      {
-        "name": "Ministral-3-8B-Reasoning-2512-BF16-mmproj.gguf",
-        "url": "https://huggingface.co/mistralai/Ministral-3-8B-Reasoning-2512-GGUF/resolve/main/Ministral-3-8B-Reasoning-2512-BF16-mmproj.gguf",
-        "description": "Multimodal projector for Ministral 3 8B Reasoning"
-      }
-    ]
-  },
+  // {
+  //   "name": "Ministral 3 3B Instruct",
+  //   "description": "Mistral's compact vision-language model with 256K context, multilingual support, and strong adherence to system prompts.",
+  //   "size": "2.15 GB",
+  //   "huggingFaceLink": "https://huggingface.co/unsloth/Ministral-3-3B-Instruct-2512-GGUF/resolve/main/Ministral-3-3B-Instruct-2512-Q4_0.gguf",
+  //   "licenseLink": "https://www.apache.org/licenses/LICENSE-2.0",
+  //   "modelFamily": "3 Billion",
+  //   "quantization": "Q4_K_M",
+  //   "tags": ["vision", "fastest", "recommended"],
+  //   "modelType": ModelType.VISION,
+  //   "capabilities": ["vision", "text"],
+  //   "supportsMultimodal": true,
+  //   "additionalFiles": [
+  //     {
+  //       "name": "Ministral-3-3B-Instruct-2512-BF16-mmproj.gguf",
+  //       "url": "https://huggingface.co/unsloth/Ministral-3-3B-Instruct-2512-GGUF/resolve/main/mmproj-BF16.gguf",
+  //       "description": "Multimodal projector for Ministral 3 3B"
+  //     }
+  //   ]
+  // },
+  // {
+  //   "name": "Ministral 3 8B Reasoning",
+  //   "description": "Mistral's reasoning model with vision capabilities, optimized for complex multi-step reasoning, math, and coding tasks.",
+  //   "size": "5.2 GB",
+  //   "huggingFaceLink": "https://huggingface.co/unsloth/Ministral-3-8B-Reasoning-2512-GGUF/resolve/main/Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf",
+  //   "licenseLink": "https://www.apache.org/licenses/LICENSE-2.0",
+  //   "modelFamily": "8 Billion",
+  //   "quantization": "Q4_K_M",
+  //   "tags": ["reasoning", "vision"],
+  //   "modelType": ModelType.VISION,
+  //   "capabilities": ["vision", "text"],
+  //   "supportsMultimodal": true,
+  //   "additionalFiles": [
+  //     {
+  //       "name": "Ministral-3-8B-Reasoning-2512-BF16-mmproj.gguf",
+  //       "url": "https://huggingface.co/unsloth/Ministral-3-8B-Reasoning-2512-GGUF/resolve/main/mmproj-BF16.gguf",
+  //       "description": "Multimodal projector for Ministral 3 8B Reasoning"
+  //     }
+  //   ]
+  // },
   {
     "name": "Gemma 3n-E4B Instruct (Q2_K)",
     "description": "Google's enhanced Gemma 3 variant with optimized efficiency and fast inference capabilities.",
