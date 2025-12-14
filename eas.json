@@ -18,7 +18,7 @@
       "distribution": "internal",
       "channel": "preview",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       },
       "ios": {
         "buildConfiguration": "Release"
@@ -28,7 +28,7 @@
       "distribution": "store",
       "channel": "production",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       },
       "ios": {
         "autoIncrement": false
