@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { theme } from '../../constants/theme';
 import SettingSlider from '../SettingSlider';
 import { getThemeAwareColor } from '../../utils/ColorUtils';
+import { featureCaps } from '../../services/feature-availability';
 
 type ModelSettings = {
   maxTokens: number;
@@ -48,6 +49,7 @@ type CustomModelSettingsSectionProps = {
   onSeedPress: () => void;
   onNProbsPress: () => void;
   onLogitBiasPress: () => void;
+  selectedInferenceEngine?: 'llama.cpp' | 'mediapipe' | 'mlc-llm' | 'mlx';
 };
 
 const CustomModelSettingsSection = ({
@@ -61,9 +63,12 @@ const CustomModelSettingsSection = ({
   onSeedPress,
   onNProbsPress,
   onLogitBiasPress,
+  selectedInferenceEngine,
 }: CustomModelSettingsSectionProps) => {
   const { theme: currentTheme } = useTheme();
   const themeColors = theme[currentTheme];
+  const engineKey = selectedInferenceEngine === 'mlx' ? 'mlx' : 'llama';
+  const caps = featureCaps[engineKey];
 
   const isDifferent = (current: any, defaultValue: any): boolean => {
     if (typeof current === 'number' && typeof defaultValue === 'number') {
@@ -79,7 +84,8 @@ const CustomModelSettingsSection = ({
     value, 
     onPress, 
     showReset = false, 
-    onReset 
+    onReset,
+    disabled = false,
   }: {
     icon: string;
     title: string;
@@ -88,9 +94,10 @@ const CustomModelSettingsSection = ({
     onPress: () => void;
     showReset?: boolean;
     onReset?: () => void;
+    disabled?: boolean;
   }) => (
-    <View style={[styles.settingCard, { backgroundColor: themeColors.borderColor }]}>
-      <TouchableOpacity style={styles.settingContent} onPress={onPress}>
+    <View style={[styles.settingCard, { backgroundColor: themeColors.borderColor }, disabled && { opacity: 0.5 }]}>
+      <TouchableOpacity style={styles.settingContent} onPress={disabled ? undefined : onPress} disabled={disabled}>
         <View style={styles.settingLeft}>
           <View style={[styles.iconContainer, { backgroundColor: getThemeAwareColor('#4a0660', currentTheme) + '20' }]}>
             <MaterialCommunityIcons name={icon as any} size={20} color={getThemeAwareColor('#4a0660', currentTheme)} />
@@ -124,7 +131,8 @@ const CustomModelSettingsSection = ({
     value, 
     onValueChange, 
     showReset = false, 
-    onReset 
+    onReset,
+    disabled = false,
   }: {
     icon: string;
     title: string;
@@ -133,8 +141,9 @@ const CustomModelSettingsSection = ({
     onValueChange: (value: boolean) => void;
     showReset?: boolean;
     onReset?: () => void;
+    disabled?: boolean;
   }) => (
-    <View style={[styles.settingCard, { backgroundColor: themeColors.borderColor }]}>
+    <View style={[styles.settingCard, { backgroundColor: themeColors.borderColor }, disabled && { opacity: 0.5 }]}>
       <View style={styles.settingContent}>
         <View style={styles.settingLeft}>
           <View style={[styles.iconContainer, { backgroundColor: getThemeAwareColor('#4a0660', currentTheme) + '20' }]}>
@@ -157,6 +166,7 @@ const CustomModelSettingsSection = ({
         <Switch
           value={value}
           onValueChange={onValueChange}
+          disabled={disabled}
           trackColor={{
             false: themeColors.secondaryText + '40',
             true: getThemeAwareColor('#4a0660', currentTheme) + '80'
@@ -176,7 +186,8 @@ const CustomModelSettingsSection = ({
     onValueChange, 
     minimumValue, 
     maximumValue, 
-    step 
+    step,
+    disabled = false,
   }: {
     icon: string;
     title: string;
@@ -187,8 +198,9 @@ const CustomModelSettingsSection = ({
     minimumValue: number;
     maximumValue: number;
     step: number;
+    disabled?: boolean;
   }) => (
-    <View style={[styles.settingCard, { backgroundColor: themeColors.borderColor }]}>
+    <View style={[styles.settingCard, { backgroundColor: themeColors.borderColor }, disabled && { opacity: 0.5 }]}>
       <View style={styles.sliderContent}>
         <View style={styles.sliderHeader}>
           <View style={styles.settingLeft}>
@@ -220,6 +232,8 @@ const CustomModelSettingsSection = ({
           maximumValue={maximumValue}
           step={step}
           description=""
+          onPressChange={() => {}}
+          disabled={disabled}
         />
       </View>
     </View>
@@ -319,6 +333,7 @@ const CustomModelSettingsSection = ({
         onValueChange={(value) => onSettingsChange({ jinja: value })}
         showReset={isDifferent(modelSettings.jinja, defaultSettings.jinja)}
         onReset={() => onSettingsChange({ jinja: defaultSettings.jinja ?? false })}
+        disabled={!caps.jinja}
       />
 
       <SwitchItem

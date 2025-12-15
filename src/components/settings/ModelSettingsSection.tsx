@@ -7,6 +7,7 @@ import SettingsSection from './SettingsSection';
 import SettingSlider from '../SettingSlider';
 import InferenceEngineSection from './InferenceEngine';
 import * as Device from 'expo-device';
+import { featureCaps } from '../../services/feature-availability';
 
 const OPENCL_DOCS_URL = 'https://github.com/ggml-org/llama.cpp/blob/master/docs/backend/OPENCL.md#model-preparation';
 
@@ -114,6 +115,8 @@ const ModelSettingsSection = ({
   const themeColors = theme[currentTheme];
   const iconColor = currentTheme === 'dark' ? '#FFFFFF' : themeColors.primary;
   const [showModelSettings, setShowModelSettings] = useState(defaultExpanded);
+  const engineKey = selectedInferenceEngine === 'mlx' ? 'mlx' : 'llama';
+  const caps = featureCaps[engineKey];
   
   const [showGrammarDialog, setShowGrammarDialog] = useState(false);
   const [showSeedDialog, setShowSeedDialog] = useState(false);
@@ -603,6 +606,7 @@ const ModelSettingsSection = ({
         maximumValue={1}
         step={0.01}
         description="Chance for token removal via XTC sampler. 0 disables XTC sampling."
+        disabled={!caps.xtc}
         onPressChange={() => onDialogOpen({
           key: 'xtcProbability',
           label: 'XTC Probability',
@@ -623,6 +627,7 @@ const ModelSettingsSection = ({
         maximumValue={1}
         step={0.01}
         description="Minimum probability threshold for XTC removal. Values > 0.5 disable XTC."
+        disabled={!caps.xtc}
         onPressChange={() => onDialogOpen({
           key: 'xtcThreshold',
           label: 'XTC Threshold',
@@ -698,7 +703,7 @@ const ModelSettingsSection = ({
         <Text style={[styles.sectionTitle, { color: themeColors.secondaryText }]}>CORE SETTINGS</Text>
       </View>
 
-      <View style={[styles.settingItem, styles.settingItemBorder]}>
+      <View style={[styles.settingItem, styles.settingItemBorder, !caps.jinja && styles.disabledSettingItem]}>
         <View style={styles.settingLeft}>
           <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}>
             <MaterialCommunityIcons name="code-braces" size={22} color={iconColor} />
@@ -724,14 +729,19 @@ const ModelSettingsSection = ({
         <Switch
           value={modelSettings.jinja}
           onValueChange={(value) => onSettingsChange({ jinja: value })}
+          disabled={!caps.jinja}
           trackColor={{ false: themeColors.borderColor, true: themeColors.primary + '80' }}
           thumbColor={modelSettings.jinja ? themeColors.primary : themeColors.background}
         />
       </View>
 
       <TouchableOpacity 
-        style={[styles.settingItem, styles.settingItemBorder]}
+        style={[styles.settingItem, styles.settingItemBorder, !caps.grammar && styles.disabledSettingItem]}
+        disabled={!caps.grammar}
         onPress={() => {
+          if (!caps.grammar) {
+            return;
+          }
           setTempGrammar(modelSettings.grammar);
           setShowGrammarDialog(true);
         }}
@@ -972,6 +982,7 @@ const ModelSettingsSection = ({
         maximumValue={2}
         step={1}
         description="Enable advanced creativity control. 0=disabled, 1=Mirostat, 2=Mirostat 2.0 (smoother)."
+        disabled={!caps.mirostat}
         onPressChange={() => onDialogOpen({
           key: 'mirostat',
           label: 'Mirostat Mode',
@@ -992,6 +1003,7 @@ const ModelSettingsSection = ({
         maximumValue={10}
         step={0.1}
         description="Target creativity level for Mirostat. Higher values allow more diverse responses."
+        disabled={!caps.mirostat}
         onPressChange={() => onDialogOpen({
           key: 'mirostatTau',
           label: 'Mirostat Tau',
@@ -1012,6 +1024,7 @@ const ModelSettingsSection = ({
         maximumValue={1}
         step={0.01}
         description="How quickly Mirostat adjusts creativity. Higher values mean faster adjustments."
+        disabled={!caps.mirostat}
         onPressChange={() => onDialogOpen({
           key: 'mirostatEta',
           label: 'Mirostat Eta',
@@ -1036,6 +1049,7 @@ const ModelSettingsSection = ({
         maximumValue={5}
         step={0.1}
         description="Strength of DRY feature. Higher values strongly prevent repetition. 0 disables DRY."
+        disabled={!caps.dry}
         onPressChange={() => onDialogOpen({
           key: 'dryMultiplier',
           label: 'DRY Multiplier',
@@ -1056,6 +1070,7 @@ const ModelSettingsSection = ({
         maximumValue={4}
         step={0.05}
         description="Base penalty for repetition in DRY mode. Higher values are more aggressive."
+        disabled={!caps.dry}
         onPressChange={() => onDialogOpen({
           key: 'dryBase',
           label: 'DRY Base',
@@ -1076,6 +1091,7 @@ const ModelSettingsSection = ({
         maximumValue={20}
         step={1}
         description="How many words can repeat before DRY penalty kicks in."
+        disabled={!caps.dry}
         onPressChange={() => onDialogOpen({
           key: 'dryAllowedLength',
           label: 'DRY Allowed Length',
@@ -1096,6 +1112,7 @@ const ModelSettingsSection = ({
         maximumValue={512}
         step={1}
         description="How far back to look for repetition in DRY mode. -1 uses context size."
+        disabled={!caps.dry}
         onPressChange={() => onDialogOpen({
           key: 'dryPenaltyLastN',
           label: 'DRY Penalty Last N',
@@ -1108,8 +1125,12 @@ const ModelSettingsSection = ({
       />
 
       <TouchableOpacity 
-        style={[styles.settingItem, styles.settingItemBorder]}
+        style={[styles.settingItem, styles.settingItemBorder, !caps.dry && styles.disabledSettingItem]}
+        disabled={!caps.dry}
         onPress={() => {
+          if (!caps.dry) {
+            return;
+          }
           setTempDrySequenceBreakers((modelSettings.drySequenceBreakers || []).join('\n'));
           setShowDrySequenceBreakersDialog(true);
         }}

@@ -14,6 +14,7 @@ interface SettingSliderProps {
   step: number;
   description: string;
   onPressChange: () => void;
+  disabled?: boolean;
 }
 
 export default function SettingSlider({
@@ -26,6 +27,7 @@ export default function SettingSlider({
   step,
   description,
   onPressChange,
+  disabled = false,
 }: SettingSliderProps) {
   const { theme: currentTheme } = useTheme();
   const themeColors = theme[currentTheme];
@@ -41,8 +43,9 @@ export default function SettingSlider({
 
   return (
     <TouchableOpacity 
-      style={[styles.settingItem, styles.settingItemBorder]}
-      onPress={onPressChange}
+      style={[styles.settingItem, styles.settingItemBorder, disabled && { opacity: 0.5 }]}
+      onPress={disabled ? undefined : onPressChange}
+      disabled={disabled}
     >
       <View style={styles.settingLeft}>
         <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}>
@@ -60,7 +63,7 @@ export default function SettingSlider({
           <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
             {description}
           </Text>
-          {!isDefaultValue && (
+            {!isDefaultValue && !disabled && (
             <TouchableOpacity
               onPress={handleReset}
               style={[styles.resetButton, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}
