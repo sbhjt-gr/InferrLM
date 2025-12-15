@@ -98,20 +98,6 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
         }}
         disabled={isDisabled}
       >
-        <View
-          style={[
-            styles.engineIconContainer,
-            { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(74, 6, 96, 0.1)' },
-          ]}
-        >
-          <MaterialCommunityIcons
-            name={engine.icon as any}
-            size={28}
-            color={isDisabled
-              ? (currentTheme === 'dark' ? '#666' : themeColors.secondaryText)
-              : (isSelected ? (currentTheme === 'dark' ? '#fff' : '#4a0660') : (currentTheme === 'dark' ? '#fff' : themeColors.text))}
-          />
-        </View>
         <View style={styles.engineInfo}>
           <Text
             style={[
@@ -137,23 +123,6 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
           {engine.requiresAppleSilicon && !isAppleSilicon && (
             <Text style={[styles.requirementText, { color: currentTheme === 'dark' ? '#FF9494' : '#d32f2f' }]}>Requires Apple Silicon</Text>
           )}
-
-          <View style={styles.featureBlock}>
-            <Text style={[styles.featureTitle, { color: themeColors.text }]}>Feature support</Text>
-            {featureList.map(item => {
-              const on = engineFeatureCaps[item.id];
-              return (
-                <View key={item.id} style={styles.featureRow}>
-                  <MaterialCommunityIcons
-                    name={on ? 'check-circle' : 'close-circle'}
-                    size={18}
-                    color={on ? themeColors.primary : '#ff3b30'}
-                  />
-                  <Text style={[styles.featureText, { color: themeColors.text }]}>{item.label}</Text>
-                </View>
-              );
-            })}
-          </View>
         </View>
         {isSelected && (
           <View style={styles.selectedIndicator}>
@@ -170,16 +139,17 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
 
   const themeColors = theme[currentTheme];
   const selectedDisplay = engines.find(e => e.id === selectedEngine)?.name ?? 'Unknown';
+  const iconColor = currentTheme === 'dark' ? '#FFFFFF' : themeColors.primary;
 
   return (
     <>
       <TouchableOpacity
-        style={[styles.settingItem, styles.settingItemBorder, styles.settingItemBottomBorder]}
+        style={[styles.settingItem, styles.settingItemBottomBorder]}
         onPress={() => setModalVisible(true)}
       >
         <View style={styles.settingLeft}>
-          <View style={[styles.iconContainer, { backgroundColor: themeColors.primary }]}>
-            <MaterialCommunityIcons name="robot" size={24} color="white" />
+          <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}>
+            <MaterialCommunityIcons name="engine" size={22} color={iconColor} />
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={[styles.settingText, { color: themeColors.text }]}>Inference Engine</Text>
@@ -303,15 +273,6 @@ const styles = StyleSheet.create({
   engineItemDisabled: {
     opacity: 0.5,
   },
-  engineIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(74, 6, 96, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
   engineInfo: {
     flex: 1,
   },
@@ -330,23 +291,6 @@ const styles = StyleSheet.create({
   },
   selectedIndicator: {
     marginLeft: 12,
-  },
-  featureBlock: {
-    marginTop: 12,
-  },
-  featureTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  featureText: {
-    fontSize: 14,
-    marginLeft: 8,
   },
 });
 
