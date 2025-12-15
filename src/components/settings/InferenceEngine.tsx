@@ -35,13 +35,7 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
   const { theme: currentTheme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const isAppleSilicon = Platform.OS === 'ios' && (
-    Device.modelName?.includes('M1') ||
-    Device.modelName?.includes('M2') ||
-    Device.modelName?.includes('M3') ||
-    Device.modelName?.includes('M4') ||
-    Device.modelName?.includes('M5')
-  );
+  const supportsMLX = Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 16;
 
   const engines = useMemo(() => [
     {
@@ -54,10 +48,10 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
     {
       id: 'mlx' as const,
       name: 'MLX (beta)',
-      description: 'Apple Silicon optimized inference',
+      description: 'Fast inference using MLX Swift',
       icon: 'apple',
       enabled: true,
-      requiresAppleSilicon: true,
+      requiresMLX: true,
     },
     {
       id: 'mlc-llm' as const,
@@ -77,7 +71,7 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
 
   const renderEngineItem = (engine: (typeof engines)[number]) => {
     const isSelected = selectedEngine === engine.id;
-    const isDisabled = !engine.enabled || (engine.requiresAppleSilicon && !isAppleSilicon);
+    const isDisabled = !engine.enabled || (engine.requiresMLX && !supportsMLX);
     const themeColors = theme[currentTheme];
     const capsKey = engine.id === 'mlx' ? 'mlx' : 'llama';
     const engineFeatureCaps: EngineCaps = featureCaps[capsKey];
@@ -120,8 +114,8 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
           >
             {engine.description}
           </Text>
-          {engine.requiresAppleSilicon && !isAppleSilicon && (
-            <Text style={[styles.requirementText, { color: currentTheme === 'dark' ? '#FF9494' : '#d32f2f' }]}>Requires Apple Silicon</Text>
+          {engine.requiresMLX && !supportsMLX && (
+            <Text style={[styles.requirementText, { color: currentTheme === 'dark' ? '#FF9494' : '#d32f2f' }]}>Requires iOS 16+</Text>
           )}
         </View>
         {isSelected && (
