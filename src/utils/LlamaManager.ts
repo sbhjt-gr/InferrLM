@@ -14,7 +14,7 @@ import { TokenProcessingService } from '../services/TokenProcessingService';
 import { LlamaSettingsManager } from '../services/LlamaSettingsManager';
 import { LLAMA_INIT_CONFIG, TITLE_GENERATION_CONFIG } from '../config/llamaConfig';
 import { gpuSettingsService } from '../services/GpuSettingsService';
-import { checkGpuSupport, type GpuSupport } from '../utils/gpuCapabilities';
+import { checkGpuSupport, type GpuSupport } from './gpuCapabilities';
 
 const LlamaManagerModule = NativeModules.LlamaManager as LlamaManagerInterface;
 
@@ -55,8 +55,6 @@ class LlamaManager {
           finalModelPath = finalModelPath.replace('file://', '');
         }
       }
-
-      const modelInfo = await loadLlamaModelInfo(finalModelPath);
 
       if (this.context) {
         const contextToRelease = this.context;

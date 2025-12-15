@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Platform, Modal } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, Platform, Modal, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Device from 'expo-device';
+
 import { useTheme } from '../../context/ThemeContext';
 import { theme } from '../../constants/theme';
 import SettingsSection from './SettingsSection';
-import * as Device from 'expo-device';
+import { featureCaps } from '../../services/feature-availability';
+import { EngineCaps } from '../../managers/inference-manager';
 
 type InferenceEngine = 'llama.cpp' | 'mediapipe' | 'mlc-llm' | 'mlx';
 
@@ -13,6 +16,18 @@ interface InferenceEngineProps {
   selectedEngine: InferenceEngine;
   onEngineChange: (engine: InferenceEngine) => void;
 }
+
+const featureList: { id: keyof EngineCaps; label: string }[] = [
+  { id: 'embeddings', label: 'Embeddings' },
+  { id: 'vision', label: 'Vision' },
+  { id: 'audio', label: 'Audio / TTS' },
+  { id: 'rag', label: 'RAG' },
+  { id: 'grammar', label: 'JSON / Grammar' },
+  { id: 'jinja', label: 'Jinja templates' },
+  { id: 'dry', label: 'Dry-run / speculative' },
+  { id: 'mirostat', label: 'Mirostat sampling' },
+  { id: 'xtc', label: 'XTC' },
+];
 
 const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
   selectedEngine,
@@ -22,112 +37,131 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
 
   const isAppleSilicon = Platform.OS === 'ios' && (
-    Device.modelName?.includes('M1') || 
-    Device.modelName?.includes('M2') || 
+    Device.modelName?.includes('M1') ||
+    Device.modelName?.includes('M2') ||
     Device.modelName?.includes('M3') ||
-    Device.modelName?.includes('M4')
+    Device.modelName?.includes('M4') ||
+    Device.modelName?.includes('M5')
   );
 
-  const engines = [
+  const engines = useMemo(() => [
     {
-      id: 'llama.cpp' as InferenceEngine,
-      name: 'llama.cpp',
-      description: 'The most popular inference engine with broad model support',
-      icon: 'language-cpp',
+      id: 'llama.cpp' as const,
+      name: 'Llama.cpp (default)',
+      description: 'Widest model compatibility with the Llama.cpp engine',
+      icon: 'chip',
       enabled: true,
     },
     {
-      id: 'mediapipe' as InferenceEngine,
-      name: 'Google AI Edge Gallery (MediaPipe)',
-      description: 'MediaPipe LLM inference of AI Edge Gallery (not implemented)',
-      icon: 'google',
-      enabled: false,
+      id: 'mlx' as const,
+      name: 'MLX (beta)',
+      description: 'Apple Silicon optimized inference',
+      icon: 'apple',
+      enabled: true,
+      requiresAppleSilicon: true,
     },
     {
-      id: 'mlc-llm' as InferenceEngine,
+      id: 'mlc-llm' as const,
       name: 'MLC LLM',
-      description: 'Machine Learning Compilation for LLMs (not implemented)',
+      description: 'MLC pipeline (coming soon)',
       icon: 'flash',
       enabled: false,
     },
     {
-      id: 'mlx' as InferenceEngine,
-      name: 'MLX',
-      description: 'Apple Silicon optimized inference (not implemented)',
-      icon: 'apple',
+      id: 'mediapipe' as const,
+      name: 'MediaPipe',
+      description: 'MediaPipe pipeline (coming soon)',
+      icon: 'google',
       enabled: false,
-      requiresAppleSilicon: true,
     },
-  ];
+  ], []);
 
-  const getEngineDisplayName = (engineId: InferenceEngine): string => {
-    const engine = engines.find(e => e.id === engineId);
-    return engine?.name || engineId;
-  };
-
-  const handleEngineSelect = (engine: typeof engines[0]) => {
-    if (!engine.enabled || (engine.requiresAppleSilicon && !isAppleSilicon)) {
-      return;
-    }
-    onEngineChange(engine.id);
-    setModalVisible(false);
-  };
-
-  const renderEngineItem = (engine: typeof engines[0]) => {
+  const renderEngineItem = (engine: (typeof engines)[number]) => {
     const isSelected = selectedEngine === engine.id;
     const isDisabled = !engine.enabled || (engine.requiresAppleSilicon && !isAppleSilicon);
+    const themeColors = theme[currentTheme];
+    const capsKey = engine.id === 'mlx' ? 'mlx' : 'llama';
+    const engineFeatureCaps: EngineCaps = featureCaps[capsKey];
 
     return (
       <TouchableOpacity
         key={engine.id}
         style={[
           styles.engineItem,
-          { backgroundColor: theme[currentTheme].borderColor },
+          { backgroundColor: themeColors.borderColor },
           isSelected && styles.selectedEngineItem,
-          isDisabled && styles.engineItemDisabled
+          isDisabled && styles.engineItemDisabled,
         ]}
-        onPress={() => handleEngineSelect(engine)}
+        onPress={() => {
+          if (isDisabled) return;
+          onEngineChange(engine.id);
+          setModalVisible(false);
+        }}
         disabled={isDisabled}
       >
-        <View style={styles.engineIconContainer}>
-          <MaterialCommunityIcons 
+        <View
+          style={[
+            styles.engineIconContainer,
+            { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(74, 6, 96, 0.1)' },
+          ]}
+        >
+          <MaterialCommunityIcons
             name={engine.icon as any}
-            size={28} 
-            color={isDisabled ? theme[currentTheme].secondaryText : (isSelected ? theme[currentTheme].primary : theme[currentTheme].text)} 
+            size={28}
+            color={isDisabled
+              ? (currentTheme === 'dark' ? '#666' : themeColors.secondaryText)
+              : (isSelected ? (currentTheme === 'dark' ? '#fff' : '#4a0660') : (currentTheme === 'dark' ? '#fff' : themeColors.text))}
           />
         </View>
         <View style={styles.engineInfo}>
-          <Text 
+          <Text
             style={[
-              styles.engineName, 
-              { 
-                color: isDisabled ? theme[currentTheme].secondaryText : theme[currentTheme].text,
+              styles.engineName,
+              {
+                color: isDisabled
+                  ? (currentTheme === 'dark' ? '#666' : themeColors.secondaryText)
+                  : (currentTheme === 'dark' ? '#fff' : themeColors.text),
                 fontWeight: isSelected ? '600' : '500',
-              }
+              },
             ]}
           >
             {engine.name}
           </Text>
-          <Text 
+          <Text
             style={[
-              styles.engineDescription, 
-              { color: isDisabled ? theme[currentTheme].secondaryText : theme[currentTheme].secondaryText }
+              styles.engineDescription,
+              { color: isDisabled ? (currentTheme === 'dark' ? '#666' : themeColors.secondaryText) : (currentTheme === 'dark' ? '#aaa' : themeColors.secondaryText) },
             ]}
           >
             {engine.description}
           </Text>
           {engine.requiresAppleSilicon && !isAppleSilicon && (
-            <Text style={[styles.requirementText, { color: '#FF3B30' }]}>
-              Requires Apple Silicon
-            </Text>
+            <Text style={[styles.requirementText, { color: currentTheme === 'dark' ? '#FF9494' : '#d32f2f' }]}>Requires Apple Silicon</Text>
           )}
+
+          <View style={styles.featureBlock}>
+            <Text style={[styles.featureTitle, { color: themeColors.text }]}>Feature support</Text>
+            {featureList.map(item => {
+              const on = engineFeatureCaps[item.id];
+              return (
+                <View key={item.id} style={styles.featureRow}>
+                  <MaterialCommunityIcons
+                    name={on ? 'check-circle' : 'close-circle'}
+                    size={18}
+                    color={on ? themeColors.primary : '#ff3b30'}
+                  />
+                  <Text style={[styles.featureText, { color: themeColors.text }]}>{item.label}</Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
         {isSelected && (
           <View style={styles.selectedIndicator}>
-            <MaterialCommunityIcons 
-              name="check-circle" 
-              size={24} 
-              color={theme[currentTheme].primary} 
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={24}
+              color={currentTheme === 'dark' ? '#fff' : '#4a0660'}
             />
           </View>
         )}
@@ -135,69 +169,55 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
     );
   };
 
+  const themeColors = theme[currentTheme];
+  const selectedDisplay = engines.find(e => e.id === selectedEngine)?.name ?? 'Unknown';
+
   return (
-    <>
-      <SettingsSection title="INFERENCE ENGINE">
-        <TouchableOpacity
-          style={styles.settingItem}
-          onPress={() => setModalVisible(true)}
-        >
-          <View style={styles.settingLeft}>
-            <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : theme[currentTheme].primary + '20' }]}>
-              <MaterialCommunityIcons 
-                name="engine"
-                size={22} 
-                color={currentTheme === 'dark' ? '#FFFFFF' : theme[currentTheme].primary} 
-              />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingText, { color: theme[currentTheme].text }]}>
-                Inference Engine
-              </Text>
-              <Text style={[styles.settingDescription, { color: theme[currentTheme].secondaryText }]}>
-                {getEngineDisplayName(selectedEngine)}
-              </Text>
-            </View>
+    <SettingsSection title="Inference Engine">
+      <TouchableOpacity
+        style={[styles.settingItem, styles.settingItemBorder]}
+        onPress={() => setModalVisible(true)}
+      >
+        <View style={styles.settingLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: themeColors.primary }]}>
+            <MaterialCommunityIcons name="robot" size={24} color="white" />
           </View>
-          <MaterialCommunityIcons 
-            name="chevron-right" 
-            size={20} 
-            color={theme[currentTheme].secondaryText} 
-          />
-        </TouchableOpacity>
-      </SettingsSection>
+          <View style={styles.settingTextContainer}>
+            <Text style={[styles.settingText, { color: themeColors.text }]}>Inference Engine</Text>
+            <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
+              {selectedDisplay} (restart required)
+            </Text>
+          </View>
+        </View>
+        <MaterialCommunityIcons name="chevron-right" size={24} color={themeColors.secondaryText} />
+      </TouchableOpacity>
 
       <Modal
         visible={modalVisible}
-        transparent={true}
+        transparent
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme[currentTheme].background }]}>
+          <View style={[styles.modalContent, { backgroundColor: themeColors.background }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme[currentTheme].text }]}>
-                Select Inference Engine
-              </Text>
-              <TouchableOpacity 
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <MaterialCommunityIcons 
-                  name="close" 
-                  size={24} 
-                  color={theme[currentTheme].text} 
-                />
+              <Text style={[styles.modalTitle, { color: themeColors.text }]}>Select inference engine</Text>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={themeColors.text} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.engineList}>
+            <Text style={[styles.restartNotice, { color: themeColors.secondaryText }]}>
+              Switching engines requires an app restart to take effect.
+            </Text>
+
+            <ScrollView style={styles.engineList} showsVerticalScrollIndicator={false}>
               {engines.map(renderEngineItem)}
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
-    </>
+    </SettingsSection>
   );
 };
 
@@ -251,7 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   modalTitle: {
     fontSize: 20,
@@ -259,6 +279,10 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
+  },
+  restartNotice: {
+    fontSize: 13,
+    marginBottom: 12,
   },
   engineList: {
     paddingBottom: 20,
@@ -268,7 +292,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   selectedEngineItem: {
     backgroundColor: 'rgba(74, 6, 96, 0.1)',
@@ -290,6 +314,7 @@ const styles = StyleSheet.create({
   },
   engineName: {
     fontSize: 16,
+    fontWeight: '500',
     marginBottom: 4,
   },
   engineDescription: {
@@ -303,6 +328,23 @@ const styles = StyleSheet.create({
   selectedIndicator: {
     marginLeft: 12,
   },
+  featureBlock: {
+    marginTop: 12,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  featureText: {
+    fontSize: 14,
+    marginLeft: 8,
+  },
 });
 
-export default InferenceEngineSection; 
+export default InferenceEngineSection;

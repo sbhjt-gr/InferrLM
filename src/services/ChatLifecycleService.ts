@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import chatManager from '../utils/ChatManager';
 import { llamaManager } from '../utils/LlamaManager';
-import { modelSettingsService } from '../services/ModelSettingsService';
-import { usageTrackingService } from '../services/UsageTrackingService';
-import { inAppReviewService } from '../services/InAppReviewService';
+import { modelSettingsService } from './ModelSettingsService';
+import { usageTrackingService } from './UsageTrackingService';
+import { inAppReviewService } from './InAppReviewService';
 import type { ProviderType } from './ModelManagementService';
 
 export interface ChatLifecycleCallbacks {

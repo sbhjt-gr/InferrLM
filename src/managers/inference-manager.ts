@@ -1,0 +1,59 @@
+export type EngineId = 'llama' | 'mlx';
+
+export type Msg = {
+  role: string;
+  content: string | any;
+};
+
+export type EngineCaps = {
+  embeddings: boolean;
+  vision: boolean;
+  audio: boolean;
+  rag: boolean;
+  grammar: boolean;
+  jinja: boolean;
+  dry: boolean;
+  mirostat: boolean;
+  xtc: boolean;
+};
+
+export type GenSettings = {
+  maxTokens: number;
+  temperature: number;
+  topK: number;
+  topP: number;
+  minP: number;
+  stopWords: string[];
+  seed: number;
+  penaltyRepeat: number;
+  penaltyFreq: number;
+  penaltyPresent: number;
+  mirostat: number;
+  mirostatTau: number;
+  mirostatEta: number;
+  dryMultiplier: number;
+  dryBase: number;
+  dryAllowedLength: number;
+  dryPenaltyLastN: number;
+  drySequenceBreakers: string[];
+  grammar: string;
+  jinja: boolean;
+  xtcProbability: number;
+  xtcThreshold: number;
+  typicalP: number;
+  enableThinking: boolean;
+};
+
+export type GenOpts = {
+  settings?: Partial<GenSettings>;
+  onToken?: (token: string) => boolean | void;
+};
+
+export interface InferenceManager {
+  init(modelPath: string, projectorPath?: string): Promise<void>;
+  gen(messages: Msg[], opts?: GenOpts): Promise<string>;
+  embed?(text: string): Promise<number[]>;
+  release(): Promise<void>;
+  caps(): EngineCaps;
+  ready(): boolean;
+}
