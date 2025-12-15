@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Platform, Modal, ScrollView } from 
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Device from 'expo-device';
+import * as Updates from 'expo-updates';
 
 import { useTheme } from '../../context/ThemeContext';
 import { theme } from '../../constants/theme';
@@ -34,6 +35,8 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
 }) => {
   const { theme: currentTheme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
+  const [restartModalVisible, setRestartModalVisible] = useState(false);
+  const [pendingEngine, setPendingEngine] = useState<InferenceEngine | null>(null);
 
   const supportsMLX = Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 16;
 
@@ -87,8 +90,9 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
         ]}
         onPress={() => {
           if (isDisabled) return;
-          onEngineChange(engine.id);
+          setPendingEngine(engine.id);
           setModalVisible(false);
+          setRestartModalVisible(true);
         }}
         disabled={isDisabled}
       >
@@ -177,6 +181,58 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
             <ScrollView style={styles.engineList} showsVerticalScrollIndicator={false}>
               {engines.map(renderEngineItem)}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={restartModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRestartModalVisible(false)}
+      >
+        <View style={styles.restartModalOverlay}>
+          <View style={[styles.restartModalContent, { backgroundColor: themeColors.background }]}>
+            <View style={styles.restartModalHeader}>
+              <MaterialCommunityIcons 
+                name="restart" 
+                size={24} 
+                color={themeColors.primary} 
+              />
+              <Text style={[styles.restartModalTitle, { color: themeColors.text }]}>Restart Required</Text>
+            </View>
+            
+            <Text style={[styles.restartModalText, { color: themeColors.text }]}>
+              Changing the inference engine requires restarting the app to take effect. Would you like to restart now?
+            </Text>
+            
+            <View style={styles.restartModalButtons}>
+              <TouchableOpacity
+                style={[styles.restartModalButton, { backgroundColor: themeColors.borderColor }]}
+                onPress={() => {
+                  setRestartModalVisible(false);
+                  setPendingEngine(null);
+                }}
+              >
+                <Text style={[styles.restartModalButtonText, { color: themeColors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.restartModalButton, { backgroundColor: themeColors.primary }]}
+                onPress={async () => {
+                  if (pendingEngine) {
+                    onEngineChange(pendingEngine);
+                  }
+                  setRestartModalVisible(false);
+                  try {
+                    await Updates.reloadAsync();
+                  } catch (error) {
+                  }
+                }}
+              >
+                <Text style={[styles.restartModalButtonText, { color: '#fff' }]}>Restart</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -285,6 +341,54 @@ const styles = StyleSheet.create({
   },
   selectedIndicator: {
     marginLeft: 12,
+  },
+  restartModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  restartModalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  restartModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  restartModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  restartModalText: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  restartModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  restartModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  restartModalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
