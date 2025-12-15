@@ -9,6 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useRemoteModel } from '../context/RemoteModelContext';
 import { theme } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { engineService } from '../services/inference-engine-service';
 import AppHeader from '../components/AppHeader';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
@@ -247,12 +248,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
     getSystemInfo();
   }, []);
 
+  const engineToUi = (id: 'llama' | 'mlx'): InferenceEngine => (id === 'mlx' ? 'mlx' : 'llama.cpp');
+  const uiToEngine = (id: InferenceEngine): 'llama' | 'mlx' => (id === 'mlx' ? 'mlx' : 'llama');
+
   const loadInferenceEnginePreference = async () => {
     try {
-      const saved = await AsyncStorage.getItem('@inference_engine');
-      if (saved) {
-        setSelectedInferenceEngine(saved as InferenceEngine);
-      }
+      const current = await engineService.load();
+      setSelectedInferenceEngine(engineToUi(current));
     } catch (error) {
     }
   };
@@ -267,7 +269,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
   const handleInferenceEngineChange = async (engine: InferenceEngine) => {
     try {
-      await AsyncStorage.setItem('@inference_engine', engine);
+      await engineService.set(uiToEngine(engine));
       setSelectedInferenceEngine(engine);
     } catch (error) {
       showDialog('Error', 'Failed to save inference engine preference', [

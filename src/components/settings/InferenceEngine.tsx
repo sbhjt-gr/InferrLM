@@ -137,6 +137,7 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
 
   const themeColors = theme[currentTheme];
   const selectedDisplay = engines.find(e => e.id === selectedEngine)?.name ?? 'Unknown';
+  const needsRestart = restartModalVisible || pendingEngine !== null;
   const iconColor = currentTheme === 'dark' ? '#FFFFFF' : themeColors.primary;
 
   return (
@@ -152,7 +153,7 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
           <View style={styles.settingTextContainer}>
             <Text style={[styles.settingText, { color: themeColors.text }]}>Inference Engine</Text>
             <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
-              {selectedDisplay} (restart required)
+              {needsRestart ? `${selectedDisplay} (restart required)` : selectedDisplay}
             </Text>
           </View>
         </View>
