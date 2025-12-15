@@ -139,9 +139,11 @@ export const useModelScreenLogic = (navigation: any) => {
 
       const file = result.assets[0];
       const fileName = file.name.toLowerCase();
+      const isGguf = fileName.endsWith('.gguf');
+      const isSafe = fileName.endsWith('.safetensors');
 
-      if (!fileName.endsWith('.gguf')) {
-        showDialog('Invalid File', 'Please select a valid GGUF model file (with .gguf extension)', []);
+      if (!isGguf && !isSafe) {
+        showDialog('Invalid File', 'Please select a GGUF or safetensors model file', []);
         return;
       }
 
