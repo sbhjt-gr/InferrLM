@@ -1,4 +1,5 @@
 import { llamaManager } from '../../../utils/LlamaManager';
+import { engineService } from '../../inference-engine-service';
 import { logger } from '../../../utils/logger';
 import providerKeyStorage from '../../../utils/ProviderKeyStorage';
 import { sendChunkedResponseStart, writeChunk, endChunkedResponse } from './responseUtils';
@@ -402,7 +403,7 @@ export async function handleChatRequest(
   }
 
   try {
-    const responseText = await llamaManager.generateResponse(parsed.messages, undefined, settings);
+    const responseText = await engineService.mgr().gen(parsed.messages as any, { settings });
     sendJSONResponse(socket, 200, {
       model: target.model.name,
       created_at: new Date().toISOString(),
@@ -476,7 +477,7 @@ export async function handleGenerateRequest(
   }
 
   try {
-    const responseText = await llamaManager.generateResponse(parsed.messages, undefined, settings);
+    const responseText = await engineService.mgr().gen(parsed.messages as any, { settings });
     sendJSONResponse(socket, 200, {
       model: target.model.name,
       created_at: new Date().toISOString(),

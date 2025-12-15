@@ -20,6 +20,7 @@ import { OnlineModelLLM } from './OnlineModelLLM';
 import { AppleFoundationLLM } from './AppleFoundationLLM';
 import type { ModelSettings } from '../ModelSettingsService';
 import { llamaManager } from '../../utils/LlamaManager';
+import { engineService } from '../inference-engine-service';
 import type { ProviderType } from '../ModelManagementService';
 
 const RAG_ENABLED_KEY = '@inferra/rag/enabled';
@@ -437,7 +438,11 @@ class RAGServiceClass {
 
     console.log('rag_verify_embeddings');
     try {
-      await llamaManager.generateEmbedding('__rag_probe__');
+      const embedFn = engineService.mgr().embed;
+      if (!embedFn) {
+        throw new Error('Embeddings not supported by current engine');
+      }
+      await embedFn('__rag_probe__');
       console.log('rag_embeddings_ok');
       return;
     } catch (error) {
@@ -451,7 +456,11 @@ class RAGServiceClass {
       const projectorPath = llamaManager.getMultimodalProjectorPath();
       await llamaManager.loadModel(modelPath, projectorPath ?? undefined);
       try {
-        await llamaManager.generateEmbedding('__rag_probe__');
+        const embedFn2 = engineService.mgr().embed;
+        if (!embedFn2) {
+          throw new Error('Embeddings not supported by current engine');
+        }
+        await embedFn2('__rag_probe__');
         console.log('rag_embeddings_ok_after_reload');
       } catch (finalError) {
         console.log('rag_embeddings_unsupported');

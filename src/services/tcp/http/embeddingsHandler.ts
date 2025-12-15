@@ -1,4 +1,4 @@
-import { llamaManager } from '../../../utils/LlamaManager';
+import { engineService } from '../../inference-engine-service';
 import { logger } from '../../../utils/logger';
 import type { StoredModel } from '../../ModelDownloaderTypes';
 
@@ -64,9 +64,15 @@ export function createEmbeddingsHandler(context: Context) {
 
     try {
       const vectors: number[][] = [];
+      const embedFn = engineService.mgr().embed;
+      if (!embedFn) {
+        context.respond(socket, 400, { error: 'embeddings_not_supported' });
+        logger.logWebRequest(method, path, 400);
+        return true;
+      }
 
       for (const text of inputs) {
-        const vector = await llamaManager.generateEmbedding(text);
+        const vector = await embedFn(text);
         vectors.push(vector);
       }
 

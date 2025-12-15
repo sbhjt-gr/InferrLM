@@ -1,11 +1,11 @@
 import type { Embeddings } from 'react-native-rag';
-import { llamaManager } from '../../utils/LlamaManager';
+import { engineService } from '../inference-engine-service';
 
 export class LlamaRnEmbeddings implements Embeddings {
   private loaded = false;
 
   async load(): Promise<this> {
-    if (!llamaManager.isInitialized()) {
+    if (!engineService.mgr().ready()) {
       throw new Error('Model not initialized');
     }
     console.log('rag_embeddings_load');
@@ -24,7 +24,11 @@ export class LlamaRnEmbeddings implements Embeddings {
     }
 
     console.log('rag_embed_start');
-    const result = await llamaManager.generateEmbedding(text);
+    const embedFn = engineService.mgr().embed;
+    if (!embedFn) {
+      throw new Error('Embeddings not supported by current engine');
+    }
+    const result = await embedFn(text);
     if (!result || result.length === 0) {
       console.log('rag_embed_empty');
       throw new Error('Empty embedding result');

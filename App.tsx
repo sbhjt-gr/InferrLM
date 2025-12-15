@@ -15,6 +15,7 @@ import { ModelProvider } from './src/context/ModelContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import { DownloadProvider } from './src/context/DownloadContext';
 import { modelDownloader } from './src/services/ModelDownloader';
+import { engineService } from './src/services/inference-engine-service';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundTask from 'expo-background-task';
 import { ThemeColors } from './src/types/theme';
@@ -33,6 +34,11 @@ SplashScreen.preventAutoHideAsync();
 const initializeServices = async () => {
   try {
     await initializeFirebase();
+  } catch (error) {
+  }
+  
+  try {
+    await engineService.load();
   } catch (error) {
   }
   

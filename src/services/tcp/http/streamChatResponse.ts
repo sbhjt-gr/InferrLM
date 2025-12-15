@@ -1,4 +1,4 @@
-import { llamaManager } from '../../../utils/LlamaManager';
+import { engineService } from '../../inference-engine-service';
 import { logger } from '../../../utils/logger';
 import type { StoredModel } from '../../ModelDownloaderTypes';
 import type { ModelSettings } from '../../ModelSettingsService';
@@ -35,25 +35,27 @@ export function createStreamChatResponse(context: StreamContext) {
     const started = Date.now();
 
     try {
-      const full = await llamaManager.generateResponse(
-        messages,
-        (token: string) => {
-          try {
-            context.writeChunk(socket, {
-              model: model.name,
-              created_at: new Date().toISOString(),
-              response: token,
-              done: false
-            });
-          } catch (error) {
-            const writeMessage = error instanceof Error ? error.message : 'write_failed';
-            const safeMessage = writeMessage.replace(/\s+/g, '_');
-            logger.error(`stream_chunk_failed:${safeMessage}`, 'http');
-            return false;
-          }
-          return true;
-        },
-        settings
+      const full = await engineService.mgr().gen(
+        messages as any,
+        {
+          onToken: (token: string) => {
+            try {
+              context.writeChunk(socket, {
+                model: model.name,
+                created_at: new Date().toISOString(),
+                response: token,
+                done: false
+              });
+            } catch (error) {
+              const writeMessage = error instanceof Error ? error.message : 'write_failed';
+              const safeMessage = writeMessage.replace(/\s+/g, '_');
+              logger.error(`stream_chunk_failed:${safeMessage}`, 'http');
+              return false;
+            }
+            return true;
+          },
+          settings
+        }
       );
 
       const duration = Date.now() - started;

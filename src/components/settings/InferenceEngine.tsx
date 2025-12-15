@@ -66,7 +66,7 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
     {
       id: 'mediapipe' as const,
       name: 'MediaPipe',
-      description: 'MediaPipe pipeline (coming soon)',
+      description: 'MediaPipe pipeline of Google AI Edge Gallery (coming soon)',
       icon: 'google',
       enabled: false,
     },

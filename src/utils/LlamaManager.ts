@@ -240,7 +240,6 @@ class LlamaManager {
     this.isCancelled = false;
     this.tokenProcessingService.setCancelled(false);
     
-    const settings = customSettings || this.settingsManager.getSettings();
 
     try {
       const processedMessages = await Promise.all(
@@ -275,56 +274,6 @@ class LlamaManager {
             };
           }
         })
-      );
-
-      const result = await this.context.completion(
-        {
-          messages: processedMessages,
-          n_predict: settings.maxTokens,
-          stop: settings.stopWords,
-          temperature: settings.temperature,
-          top_k: settings.topK,
-          top_p: settings.topP,
-          min_p: settings.minP,
-          jinja: settings.jinja,
-          grammar: settings.grammar || undefined,
-          n_probs: settings.nProbs,
-          penalty_last_n: settings.penaltyLastN,
-          penalty_repeat: settings.penaltyRepeat,
-          penalty_freq: settings.penaltyFreq,
-          penalty_present: settings.penaltyPresent,
-          mirostat: settings.mirostat,
-          mirostat_tau: settings.mirostatTau,
-          mirostat_eta: settings.mirostatEta,
-          dry_multiplier: settings.dryMultiplier,
-          dry_base: settings.dryBase,
-          dry_allowed_length: settings.dryAllowedLength,
-          dry_penalty_last_n: settings.dryPenaltyLastN,
-          dry_sequence_breakers: settings.drySequenceBreakers,
-          ignore_eos: settings.ignoreEos,
-          logit_bias: settings.logitBias.length > 0 ? settings.logitBias : undefined,
-          seed: settings.seed,
-          xtc_probability: settings.xtcProbability,
-          xtc_threshold: settings.xtcThreshold,
-          typical_p: settings.typicalP,
-          enable_thinking: settings.enableThinking,
-        },
-        (data) => {
-          if (this.isCancelled) {
-            return false;
-          }
-          
-          if (!settings.stopWords.includes(data.token)) {
-            fullResponse += data.token;
-            
-            this.tokenProcessingService.queueToken(data.token);
-            
-            this.tokenProcessingService.startTokenProcessing(onToken);
-            
-            return !this.isCancelled;
-          }
-          return false;
-        }
       );
 
       await this.tokenProcessingService.waitForTokenQueueCompletion();

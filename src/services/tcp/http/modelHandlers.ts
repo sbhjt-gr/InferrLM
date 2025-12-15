@@ -1,5 +1,5 @@
 import { modelDownloader } from '../../ModelDownloader';
-import { llamaManager } from '../../../utils/LlamaManager';
+import { engineService } from '../../inference-engine-service';
 import { logger } from '../../../utils/logger';
 import type { StoredModel } from '../../ModelDownloaderTypes';
 import { parseJsonBody } from './jsonParser';
@@ -125,9 +125,15 @@ export async function handleEmbeddingsRequest(
 
   try {
     const vectors: number[][] = [];
+    const embedFn = engineService.mgr().embed;
+    if (!embedFn) {
+      sendJSONResponse(socket, 400, { error: 'embeddings_not_supported' });
+      logger.logWebRequest(method, path, 400);
+      return;
+    }
 
     for (const text of inputs) {
-      const vector = await llamaManager.generateEmbedding(text);
+      const vector = await embedFn(text);
       vectors.push(vector);
     }
 

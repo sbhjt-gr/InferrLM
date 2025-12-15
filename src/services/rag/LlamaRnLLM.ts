@@ -1,5 +1,6 @@
 import type { LLM, Message } from 'react-native-rag';
 import { llamaManager } from '../../utils/LlamaManager';
+import { engineService } from '../inference-engine-service';
 import type { ModelSettings } from '../ModelSettingsService';
 
 export class LlamaRnLLM implements LLM {
@@ -7,7 +8,7 @@ export class LlamaRnLLM implements LLM {
   private pendingSettings: ModelSettings | undefined;
 
   async load(): Promise<this> {
-    if (!llamaManager.isInitialized()) {
+    if (!engineService.mgr().ready()) {
       throw new Error('Model not initialized');
     }
     console.log('rag_llm_load');
@@ -39,16 +40,18 @@ export class LlamaRnLLM implements LLM {
       content: message.content,
     }));
 
-    const result = await llamaManager.generateResponse(
-      transformed,
-      (token) => {
-        const shouldContinue = callback(token);
-        if (typeof shouldContinue === 'boolean') {
-          return shouldContinue;
-        }
-        return true;
-      },
-      this.pendingSettings
+    const result = await engineService.mgr().gen(
+      transformed as any,
+      {
+        onToken: (token) => {
+          const shouldContinue = callback(token);
+          if (typeof shouldContinue === 'boolean') {
+            return shouldContinue;
+          }
+          return true;
+        },
+        settings: this.pendingSettings
+      }
     );
 
     this.pendingSettings = undefined;

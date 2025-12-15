@@ -1,5 +1,6 @@
 import { ChatMessage } from '../utils/ChatManager';
 import { llamaManager } from '../utils/LlamaManager';
+import { engineService } from './inference-engine-service';
 import { onlineModelService } from './OnlineModelService';
 import chatManager from '../utils/ChatManager';
 import { generateRandomId } from '../utils/homeScreenUtils';
@@ -435,12 +436,13 @@ export class RegenerationService {
     isThinking: boolean,
     firstTokenTime: number | null
   ): Promise<void> {
-    await llamaManager.generateResponse(
-      [...newMessages].map(msg => ({ role: msg.role, content: msg.content })),
-      (token) => {
-        if (this.cancelGenerationRef.current) {
-          return false;
-        }
+    await engineService.mgr().gen(
+      [...newMessages].map(msg => ({ role: msg.role, content: msg.content })) as any,
+      {
+        onToken: (token) => {
+          if (this.cancelGenerationRef.current) {
+            return false;
+          }
         
         if (token.includes('<think>')) {
           isThinking = true;
@@ -504,8 +506,9 @@ export class RegenerationService {
         }
         
         return !this.cancelGenerationRef.current;
-      },
-      settings
+        },
+        settings
+      }
     );
     
     if (!this.cancelGenerationRef.current) {

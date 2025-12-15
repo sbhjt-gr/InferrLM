@@ -1,5 +1,5 @@
 import { ChatMessage } from '../utils/ChatManager';
-import { llamaManager } from '../utils/LlamaManager';
+import { engineService } from './inference-engine-service';
 import { onlineModelService } from './OnlineModelService';
 import chatManager from '../utils/ChatManager';
 import { generateRandomId } from '../utils/homeScreenUtils';
@@ -737,7 +737,7 @@ export class MessageProcessingService {
     if (!skipRag) {
       try {
         const ragEnabled = await RAGService.isEnabled();
-        if (ragEnabled && llamaManager.isInitialized()) {
+        if (ragEnabled && engineService.mgr().ready()) {
           if (!RAGService.isReady()) {
             await RAGService.initialize('local');
           }
@@ -765,10 +765,12 @@ export class MessageProcessingService {
         contentLength: m.content.length,
         contentPreview: m.content.substring(0, 200)
       }))));
-      await llamaManager.generateResponse(
-        baseMessages,
-        streamCallback,
-        settings
+      await engineService.mgr().gen(
+        baseMessages as any,
+        {
+          onToken: streamCallback,
+          settings
+        }
       );
     }
 

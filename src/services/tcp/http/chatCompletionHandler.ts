@@ -1,4 +1,4 @@
-import { llamaManager } from '../../../utils/LlamaManager';
+import { engineService } from '../../inference-engine-service';
 import { logger } from '../../../utils/logger';
 import type { StoredModel } from '../../ModelDownloaderTypes';
 import type { ModelSettings } from '../../ModelSettingsService';
@@ -133,7 +133,7 @@ export function createChatCompletionHandler(context: Context) {
     }
 
     try {
-      const responseText = await llamaManager.generateResponse(messages, undefined, settings);
+      const responseText = await engineService.mgr().gen(messages as any, { settings });
       context.respond(socket, 200, {
         model: target.model.name,
         created_at: new Date().toISOString(),
