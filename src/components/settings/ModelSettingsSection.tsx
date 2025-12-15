@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { theme } from '../../constants/theme';
 import SettingsSection from './SettingsSection';
 import SettingSlider from '../SettingSlider';
+import InferenceEngineSection from './InferenceEngine';
 import * as Device from 'expo-device';
 
 const OPENCL_DOCS_URL = 'https://github.com/ggml-org/llama.cpp/blob/master/docs/backend/OPENCL.md#model-preparation';
@@ -113,7 +114,6 @@ const ModelSettingsSection = ({
   const themeColors = theme[currentTheme];
   const iconColor = currentTheme === 'dark' ? '#FFFFFF' : themeColors.primary;
   const [showModelSettings, setShowModelSettings] = useState(defaultExpanded);
-  const [showInferenceEngineModal, setShowInferenceEngineModal] = useState(false);
   
   const [showGrammarDialog, setShowGrammarDialog] = useState(false);
   const [showSeedDialog, setShowSeedDialog] = useState(false);
@@ -274,32 +274,10 @@ const ModelSettingsSection = ({
       )}
 
       {selectedInferenceEngine !== undefined && onInferenceEngineChange && (
-        <TouchableOpacity
-          style={[styles.settingItem, styles.settingItemBottomBorder]}
-          onPress={() => setShowInferenceEngineModal(true)}
-        >
-          <View style={styles.settingLeft}>
-            <View style={[styles.iconContainer, { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : themeColors.primary + '20' }]}>
-              <MaterialCommunityIcons 
-                name="engine"
-                size={22} 
-                color={iconColor} 
-              />
-            </View>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingText, { color: themeColors.text }]}>
-                Inference Engine
-              </Text>
-              <Text style={[styles.settingDescription, { color: themeColors.secondaryText }]}>
-                {selectedInferenceEngine === 'llama.cpp' ? 'llama.cpp' :
-                 selectedInferenceEngine === 'mediapipe' ? 'Google AI Edge Gallery (MediaPipe)' :
-                 selectedInferenceEngine === 'mlc-llm' ? 'MLC LLM' :
-                 selectedInferenceEngine === 'mlx' ? 'MLX' : selectedInferenceEngine}
-              </Text>
-            </View>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={themeColors.secondaryText} />
-        </TouchableOpacity>
+        <InferenceEngineSection
+          selectedEngine={selectedInferenceEngine}
+          onEngineChange={onInferenceEngineChange}
+        />
       )}
 
       {showGpuSettings && gpuConfig && (
@@ -1551,151 +1529,6 @@ const ModelSettingsSection = ({
           </View>
         </View>
       </Modal>
-
-      <Modal
-        visible={showInferenceEngineModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowInferenceEngineModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: themeColors.background }]}>
-            <View style={[styles.modalHeader, { backgroundColor: themeColors.background }]}>
-              <Text style={[styles.modalTitle, { color: currentTheme === 'dark' ? '#fff' : themeColors.text }]}>
-                Select Inference Engine
-              </Text>
-              <TouchableOpacity 
-                onPress={() => setShowInferenceEngineModal(false)}
-                style={styles.closeButton}
-              >
-                <MaterialCommunityIcons 
-                  name="close" 
-                  size={24} 
-                  color={currentTheme === 'dark' ? '#fff' : themeColors.text} 
-                />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.engineListContainer} contentContainerStyle={{ paddingBottom: 20 }}>
-              {(() => {
-                const isAppleSilicon = Platform.OS === 'ios' && (
-                  Device.modelName?.includes('M1') || 
-                  Device.modelName?.includes('M2') || 
-                  Device.modelName?.includes('M3') ||
-                  Device.modelName?.includes('M4')
-                );
-
-                const engines = [
-                  {
-                    id: 'llama.cpp' as const,
-                    name: 'llama.cpp',
-                    description: 'The most popular inference engine with broad model support',
-                    icon: 'language-cpp',
-                    enabled: true,
-                  },
-                  {
-                    id: 'mediapipe' as const,
-                    name: 'Google AI Edge Gallery (MediaPipe)',
-                    description: 'MediaPipe LLM inference of AI Edge Gallery (not implemented)',
-                    icon: 'google',
-                    enabled: false,
-                  },
-                  {
-                    id: 'mlc-llm' as const,
-                    name: 'MLC LLM',
-                    description: 'Machine Learning Compilation for LLMs (not implemented)',
-                    icon: 'flash',
-                    enabled: false,
-                  },
-                  {
-                    id: 'mlx' as const,
-                    name: 'MLX',
-                    description: 'Apple Silicon optimized inference (not implemented)',
-                    icon: 'apple',
-                    enabled: false,
-                    requiresAppleSilicon: true,
-                  },
-                ];
-
-                return engines.map(engine => {
-                  const isSelected = selectedInferenceEngine === engine.id;
-                  const isDisabled = !engine.enabled || (engine.requiresAppleSilicon && !isAppleSilicon);
-
-                  return (
-                    <TouchableOpacity
-                      key={engine.id}
-                      style={[
-                        styles.engineItem,
-                        { backgroundColor: themeColors.borderColor },
-                        isSelected && styles.selectedEngineItem,
-                        isDisabled && styles.engineItemDisabled
-                      ]}
-                      onPress={() => {
-                        if (!isDisabled && onInferenceEngineChange) {
-                          onInferenceEngineChange(engine.id);
-                          setShowInferenceEngineModal(false);
-                        }
-                      }}
-                      disabled={isDisabled}
-                    >
-                      <View style={[
-                        styles.engineIconContainer,
-                        { backgroundColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(74, 6, 96, 0.1)' }
-                      ]}>
-                        <MaterialCommunityIcons 
-                          name={engine.icon as any}
-                          size={28} 
-                          color={isDisabled ? 
-                            (currentTheme === 'dark' ? '#666' : themeColors.secondaryText) : 
-                            (isSelected ? (currentTheme === 'dark' ? '#fff' : '#4a0660') : (currentTheme === 'dark' ? '#fff' : themeColors.text))
-                          } 
-                        />
-                      </View>
-                      <View style={styles.engineInfo}>
-                        <Text 
-                          style={[
-                            styles.engineName, 
-                            { 
-                              color: isDisabled ? 
-                                (currentTheme === 'dark' ? '#666' : themeColors.secondaryText) : 
-                                (currentTheme === 'dark' ? '#fff' : themeColors.text),
-                              fontWeight: isSelected ? '600' : '500',
-                            }
-                          ]}
-                        >
-                          {engine.name}
-                        </Text>
-                        <Text 
-                          style={[
-                            styles.engineDescription, 
-                            { color: isDisabled ? (currentTheme === 'dark' ? '#666' : themeColors.secondaryText) : (currentTheme === 'dark' ? '#aaa' : themeColors.secondaryText) }
-                          ]}
-                        >
-                          {engine.description}
-                        </Text>
-                        {engine.requiresAppleSilicon && !isAppleSilicon && (
-                          <Text style={[styles.requirementText, { color: currentTheme === 'dark' ? '#FF9494' : '#d32f2f' }]}>
-                            Requires Apple Silicon
-                          </Text>
-                        )}
-                      </View>
-                      {isSelected && (
-                        <View style={styles.selectedIndicator}>
-                          <MaterialCommunityIcons 
-                            name="check-circle" 
-                            size={24} 
-                            color={currentTheme === 'dark' ? '#fff' : '#4a0660'} 
-                          />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                });
-              })()}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SettingsSection>
   );
 };
@@ -1869,51 +1702,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  engineListContainer: {
-    paddingHorizontal: 4,
-  },
-  engineItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
-    marginHorizontal: 4,
-  },
-  selectedEngineItem: {
-    backgroundColor: 'rgba(74, 6, 96, 0.1)',
-  },
-  engineItemDisabled: {
-    opacity: 0.6,
-  },
-  engineIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(74, 6, 96, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  engineInfo: {
-    flex: 1,
-  },
-  engineName: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  engineDescription: {
-    fontSize: 14,
-  },
-  requirementText: {
-    fontSize: 12,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  selectedIndicator: {
-    marginLeft: 12,
   },
   linkContainer: {
     flexDirection: 'row',

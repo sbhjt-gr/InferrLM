@@ -6,7 +6,6 @@ import * as Device from 'expo-device';
 
 import { useTheme } from '../../context/ThemeContext';
 import { theme } from '../../constants/theme';
-import SettingsSection from './SettingsSection';
 import { featureCaps } from '../../services/feature-availability';
 import { EngineCaps } from '../../managers/inference-manager';
 
@@ -173,9 +172,9 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
   const selectedDisplay = engines.find(e => e.id === selectedEngine)?.name ?? 'Unknown';
 
   return (
-    <SettingsSection title="Inference Engine">
+    <>
       <TouchableOpacity
-        style={[styles.settingItem, styles.settingItemBorder]}
+        style={[styles.settingItem, styles.settingItemBorder, styles.settingItemBottomBorder]}
         onPress={() => setModalVisible(true)}
       >
         <View style={styles.settingLeft}>
@@ -217,7 +216,7 @@ const InferenceEngineSection: React.FC<InferenceEngineProps> = ({
           </View>
         </View>
       </Modal>
-    </SettingsSection>
+    </>
   );
 };
 
@@ -231,6 +230,10 @@ const styles = StyleSheet.create({
   settingItemBorder: {
     borderTopWidth: 1,
     borderTopColor: 'rgba(150, 150, 150, 0.1)',
+  },
+  settingItemBottomBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(150, 150, 150, 0.1)',
   },
   settingLeft: {
     flexDirection: 'row',
