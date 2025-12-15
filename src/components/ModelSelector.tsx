@@ -17,6 +17,8 @@ import { useModel } from '../context/ModelContext';
 import { useRemoteModel } from '../context/RemoteModelContext';
 import { getThemeAwareColor } from '../utils/ColorUtils';
 import { onlineModelService } from '../services/OnlineModelService';
+import { engineService } from '../services/inference-engine-service';
+import { EngineId } from '../managers/inference-manager';
 import { Dialog, Portal, Text, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -101,6 +103,7 @@ const ModelSelector = forwardRef<{ refreshModels: () => void }, ModelSelectorPro
 
     const [projectorSelectorVisible, setProjectorSelectorVisible] = useState(false);
     const [projectorModels, setProjectorModels] = useState<StoredModel[]>([]);
+  const [engine, setEngine] = useState<EngineId>('llama');
     const [selectedVisionModel, setSelectedVisionModel] = useState<Model | null>(null);
   const [appleFoundationEnabled, setAppleFoundationEnabled] = useState(false);
   const [appleFoundationAvailable, setAppleFoundationAvailable] = useState(false);
@@ -168,6 +171,10 @@ const ModelSelector = forwardRef<{ refreshModels: () => void }, ModelSelectorPro
       sectionsData.push({ title: 'Remote Models', data: ONLINE_MODELS });
       return sectionsData;
     }, [models, appleFoundationEnabled, appleFoundationAvailable]);
+
+    useEffect(() => {
+      engineService.load().then(setEngine).catch(() => {});
+    }, []);
 
     useEffect(() => {
       if (sections.length > 0 && sections[0]?.data?.length > 0) {
@@ -266,18 +273,30 @@ const ModelSelector = forwardRef<{ refreshModels: () => void }, ModelSelectorPro
         }
       } else {
         const storedModel = model as StoredModel;
-        
-        const isVisionModel = storedModel.name.toLowerCase().includes('llava') || 
-                             storedModel.name.toLowerCase().includes('vision') ||
-                             storedModel.name.toLowerCase().includes('minicpm');
+        const modelPath = storedModel.isExternal && storedModel.originalPath ? storedModel.originalPath : storedModel.path;
+        const pathLower = modelPath.toLowerCase();
+        const nameLower = (storedModel.name || '').toLowerCase();
+
+        if (engine === 'llama' && (pathLower.endsWith('.safetensors') || nameLower.endsWith('.safetensors'))) {
+          showDialog(
+            'Unsupported Model Format',
+            'safetensors models are not supported by llama.cpp. Switch to MLX or select a GGUF model.',
+            [<Button key="ok" onPress={hideDialog}>OK</Button>]
+          );
+          return;
+        }
+
+        const isVisionModel = nameLower.includes('llava') || 
+                             nameLower.includes('vision') ||
+                             nameLower.includes('minicpm');
         
         if (isVisionModel) {
           showMultimodalDialog(storedModel);
         } else {
           if (onModelSelect) {
-            onModelSelect('local', storedModel.path);
+            onModelSelect('local', modelPath);
           } else {
-            await loadModel(storedModel.path);
+            await loadModel(modelPath);
           }
         }
       }
