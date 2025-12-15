@@ -454,7 +454,7 @@ class RAGServiceClass {
 
       console.log('rag_reload_model');
       const projectorPath = llamaManager.getMultimodalProjectorPath();
-      await llamaManager.loadModel(modelPath, projectorPath ?? undefined);
+      await engineService.mgr().init(modelPath, projectorPath ?? undefined);
       try {
         const embedFn2 = engineService.mgr().embed;
         if (!embedFn2) {

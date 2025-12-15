@@ -8,6 +8,7 @@ import { modelDownloader } from './ModelDownloader';
 import { modelSettingsService, type ModelSettings } from './ModelSettingsService';
 import { StoredModel } from './ModelDownloaderTypes';
 import { llamaManager } from '../utils/LlamaManager';
+import { engineService } from './inference-engine-service';
 import { logger } from '../utils/logger';
 import type { ApiHandler, StatusHandler } from './tcp/http/apiTypes';
 import { createChatApiHandler } from './tcp/http/chatApiHandler';
@@ -320,11 +321,11 @@ export class TCPServer {
       ? models.find(item => item.name === target!.defaultProjectionModel || item.path === target!.defaultProjectionModel)?.path
       : undefined;
 
-    const isInitialized = llamaManager.isInitialized();
+    const isInitialized = engineService.mgr().ready();
     const currentPath = llamaManager.getModelPath();
 
     if (!isInitialized || currentPath !== target.path) {
-      await llamaManager.loadModel(target.path, projectorPath);
+      await engineService.mgr().init(target.path, projectorPath);
       this.activeModel = { path: target.path, name: target.name, startedAt: new Date().toISOString() };
     } else if (!this.activeModel || this.activeModel.path !== target.path) {
       this.activeModel = { path: target.path, name: target.name, startedAt: new Date().toISOString() };

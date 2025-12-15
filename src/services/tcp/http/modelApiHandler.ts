@@ -1,4 +1,5 @@
 import { llamaManager } from '../../../utils/LlamaManager';
+import { engineService } from '../../inference-engine-service';
 import { logger } from '../../../utils/logger';
 import { modelDownloader } from '../../ModelDownloader';
 import type { StoredModel } from '../../ModelDownloaderTypes';
@@ -75,8 +76,8 @@ export function createModelApiHandler(context: Context): ApiHandler {
 
       if (action === 'unload') {
         try {
-          if (llamaManager.isInitialized()) {
-            await llamaManager.unloadModel();
+          if (engineService.mgr().ready()) {
+            await engineService.mgr().release();
           }
           context.respond(socket, 200, { status: 'unloaded' });
           logger.logWebRequest(method, path, 200);
@@ -96,7 +97,7 @@ export function createModelApiHandler(context: Context): ApiHandler {
             return true;
           }
 
-          await llamaManager.loadModel(current, llamaManager.getMultimodalProjectorPath() ?? undefined);
+          await engineService.mgr().init(current, llamaManager.getMultimodalProjectorPath() ?? undefined);
           context.respond(socket, 200, { status: 'reloaded', path: current });
           logger.logWebRequest(method, path, 200);
         } catch (error) {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as FileSystem from 'expo-file-system';
 import { llamaManager } from '../utils/LlamaManager';
+import { engineService } from '../services/inference-engine-service';
 import { Snackbar, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './ThemeContext';
@@ -53,6 +54,15 @@ export const ModelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsModelLoading(true);
     
     try {
+      const engine = engineService.get();
+      const isGguf = modelPath.toLowerCase().endsWith('.gguf');
+
+      if (engine === 'mlx' && isGguf) {
+        showSnackbar('MLX engine does not support GGUF models', 'error');
+        setIsModelLoading(false);
+        return false;
+      }
+
       const fileInfo = await FileSystem.getInfoAsync(modelPath);
       if (!fileInfo.exists) {
         console.log('model_file_missing', modelPath);
@@ -70,25 +80,16 @@ export const ModelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
       
-      const success = await llamaManager.loadModel(modelPath, mmProjectorPath);
+      await engineService.mgr().init(modelPath, mmProjectorPath);
       
-      if (success) {
-        setSelectedModelPath(modelPath);
-        updateProjectorState();
-        
-        const modelName = modelPath.split('/').pop() || 'Model';
-        const multimodalText = mmProjectorPath ? ' (Multimodal)' : '';
-        showSnackbar(`${modelName}${multimodalText} loaded successfully`);
-        
+      setSelectedModelPath(modelPath);
+      updateProjectorState();
+      
+      const modelName = modelPath.split('/').pop() || 'Model';
+      const multimodalText = mmProjectorPath ? ' (Multimodal)' : '';
+      showSnackbar(`${modelName}${multimodalText} loaded successfully`);
 
-        return true;
-      } else {
-        showSnackbar('Failed to load model', 'error');
-        setSelectedModelPath(null);
-        setSelectedProjectorPath(null);
-        setIsMultimodalEnabled(false);
-        return false;
-      }
+      return true;
     } catch (error) {
       showSnackbar('Error loading model', 'error');
       setSelectedModelPath(null);
@@ -102,7 +103,7 @@ export const ModelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const unloadModel = async (silent: boolean = false): Promise<void> => {
     try {
-      await llamaManager.unloadModel();
+      await engineService.mgr().release();
     } catch (error) {
       llamaManager.emergencyCleanup();
     } finally {
